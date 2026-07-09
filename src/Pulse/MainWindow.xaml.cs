@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -87,9 +88,11 @@ public sealed partial class MainWindow : Window
 
         // Apply persisted preferences.
         ApplyTheme(_settings.Theme);
+        ApplyAlwaysOnTop(_settings.AlwaysOnTop);
         _loadingSettings = true;
         SelectComboByTag(ThemeCombo, _settings.Theme);
         SelectComboByTag(SpeedCombo, _settings.UpdateMs.ToString());
+        AlwaysOnTopToggle.IsOn = _settings.AlwaysOnTop;
         _loadingSettings = false;
 
         _timer = this.DispatcherQueue.CreateTimer();
@@ -516,6 +519,17 @@ public sealed partial class MainWindow : Window
             ApplyTheme(theme);
             if (!_loadingSettings) { _settings.Theme = theme; _settings.Save(); }
         }
+    }
+
+    private void AlwaysOnTopToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        ApplyAlwaysOnTop(AlwaysOnTopToggle.IsOn);
+        if (!_loadingSettings) { _settings.AlwaysOnTop = AlwaysOnTopToggle.IsOn; _settings.Save(); }
+    }
+
+    private void ApplyAlwaysOnTop(bool on)
+    {
+        if (this.AppWindow?.Presenter is OverlappedPresenter p) p.IsAlwaysOnTop = on;
     }
 
     // ---------- startup apps ----------
