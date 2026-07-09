@@ -129,14 +129,15 @@
                 <ListView x:Name="ProcList" Grid.Row="3" SelectionMode="Single"
                           ItemContainerStyle="{StaticResource StretchItem}"
                           SelectionChanged="ProcList_SelectionChanged"
-                          DoubleTapped="ProcList_DoubleTapped">
+                          DoubleTapped="ProcList_DoubleTapped"
+                          KeyDown="ProcList_KeyDown">
                     <!-- No item transitions: rows update in place, no per-refresh animation/flicker. -->
                     <ListView.ItemContainerTransitions>
                         <TransitionCollection />
                     </ListView.ItemContainerTransitions>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Padding="10,7">
+                            <Grid Padding="10,7" Background="Transparent" RightTapped="ProcRow_RightTapped">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="90" />

@@ -4,11 +4,13 @@ using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using Pulse.Models;
 using Pulse.Services;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.UI;
@@ -26,6 +28,7 @@ public sealed partial class MainWindow : Window
     private readonly ObservableCollection<ProcessInfo> _processes = new();
     private DispatcherQueueTimer? _timer;
     private bool _busy;
+    private MenuFlyout _procMenu = null!;
 
     private string _sortKey = "cpu";
     private bool _sortDesc = true;
@@ -77,6 +80,7 @@ public sealed partial class MainWindow : Window
         StyleGraph(DiskLine, DiskFill, _diskLineBrush, _diskFillBrush);
         StyleGraph(NetLine, NetFill, _netLineBrush, _netFillBrush);
         BuildCoreTiles();
+        BuildProcMenu();
         StCores.Text = _mon.Cores.ToString();
         _cpuName = ReadCpuName();
         _osName = ReadOsName();
@@ -629,7 +633,39 @@ public sealed partial class MainWindow : Window
 
     private void ProcList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => EndSelected();
 
+    private void ProcList_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Delete) { EndSelected(); e.Handled = true; }
+    }
+
     private void EndTask_Click(object sender, RoutedEventArgs e) => EndSelected();
+
+    private void BuildProcMenu()
+    {
+        _procMenu = new MenuFlyout();
+        void Add(string text, Action act)
+        {
+            var mi = new MenuFlyoutItem { Text = text };
+            mi.Click += (_, _) => act();
+            _procMenu.Items.Add(mi);
+        }
+        Add("End task", EndSelected);
+        Add("Restart", RestartSelected);
+        Add("Open file location", OpenFileLocation);
+        _procMenu.Items.Add(new MenuFlyoutSeparator());
+        Add("Copy PID", () => { if (ProcList.SelectedItem is ProcessInfo p) CopyText(p.Pid.ToString()); });
+        Add("Copy name", () => { if (ProcList.SelectedItem is ProcessInfo p) CopyText(p.Name); });
+    }
+
+    private void ProcRow_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is ProcessInfo pi)
+        {
+            ProcList.SelectedItem = pi;
+            _procMenu.ShowAt(fe, new FlyoutShowOptions { Position = e.GetPosition(fe) });
+            e.Handled = true;
+        }
+    }
 
     private void EndSelected()
     {
@@ -638,5 +674,34 @@ public sealed partial class MainWindow : Window
             _mon.EndTask(pi.Pid);
             _ = RefreshAsync();
         }
+    }
+
+    private void RestartSelected()
+    {
+        if (ProcList.SelectedItem is ProcessInfo pi)
+        {
+            if (!_mon.Restart(pi.Pid))
+                _ = ShowInfo("Couldn't restart", "This process can't be restarted — its path is unavailable or access was denied.");
+            _ = RefreshAsync();
+        }
+    }
+
+    private void OpenFileLocation()
+    {
+        if (ProcList.SelectedItem is not ProcessInfo pi) return;
+        string? path = _mon.GetPath(pi.Pid);
+        if (path is null)
+        {
+            _ = ShowInfo("Location unavailable", "Couldn't get the file path for this process — it may be protected.");
+            return;
+        }
+        try { Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true }); } catch { }
+    }
+
+    private static void CopyText(string text)
+    {
+        var dp = new DataPackage();
+        dp.SetText(text);
+        Clipboard.SetContent(dp);
     }
 }

@@ -95,4 +95,25 @@ public sealed class SystemMonitor
             return false;
         }
     }
+
+    /// <summary>Full path to a process's executable, or null if inaccessible.</summary>
+    public string? GetPath(int pid)
+    {
+        try
+        {
+            using var p = Process.GetProcessById(pid);
+            return p.MainModule?.FileName;
+        }
+        catch { return null; }
+    }
+
+    /// <summary>Kill a process and relaunch it from its executable path.</summary>
+    public bool Restart(int pid)
+    {
+        string? path = GetPath(pid);
+        if (string.IsNullOrEmpty(path)) return false;
+        try { using var p = Process.GetProcessById(pid); p.Kill(); p.WaitForExit(3000); } catch { }
+        try { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); return true; }
+        catch { return false; }
+    }
 }
