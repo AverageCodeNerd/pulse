@@ -393,6 +393,29 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Appearance -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="3">
+                                <TextBlock Text="Appearance" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Text="Match Windows, or force light or dark." FontSize="12.5"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ComboBox x:Name="ThemeCombo" Grid.Column="1" VerticalAlignment="Center" MinWidth="150"
+                                      SelectionChanged="ThemeCombo_SelectionChanged">
+                                <ComboBoxItem Content="Use system setting" Tag="System" />
+                                <ComboBoxItem Content="Light" Tag="Light" />
+                                <ComboBoxItem Content="Dark" Tag="Dark" />
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+
                     <!-- Update speed -->
                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"

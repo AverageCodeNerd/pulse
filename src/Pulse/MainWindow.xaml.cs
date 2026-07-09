@@ -19,6 +19,8 @@ public sealed partial class MainWindow : Window
 {
     private readonly SystemMonitor _mon = new();
     private readonly StartupService _startup = new();
+    private readonly AppSettings _settings = AppSettings.Load();
+    private bool _loadingSettings;
     private readonly Dictionary<int, ProcessInfo> _map = new();
     private readonly ObservableCollection<ProcessInfo> _processes = new();
     private DispatcherQueueTimer? _timer;
@@ -76,11 +78,35 @@ public sealed partial class MainWindow : Window
         _cpuName = ReadCpuName();
         _osName = ReadOsName();
 
+        // Apply persisted preferences.
+        ApplyTheme(_settings.Theme);
+        _loadingSettings = true;
+        SelectComboByTag(ThemeCombo, _settings.Theme);
+        SelectComboByTag(SpeedCombo, _settings.UpdateMs.ToString());
+        _loadingSettings = false;
+
         _timer = this.DispatcherQueue.CreateTimer();
-        _timer.Interval = TimeSpan.FromSeconds(1);
+        _timer.Interval = TimeSpan.FromMilliseconds(_settings.UpdateMs);
         _timer.Tick += async (_, _) => await RefreshAsync();
         _ = RefreshAsync();
         _timer.Start();
+    }
+
+    private void ApplyTheme(string theme)
+    {
+        if (this.Content is FrameworkElement root)
+            root.RequestedTheme = theme switch
+            {
+                "Light" => ElementTheme.Light,
+                "Dark" => ElementTheme.Dark,
+                _ => ElementTheme.Default,
+            };
+    }
+
+    private static void SelectComboByTag(ComboBox combo, string tag)
+    {
+        foreach (var obj in combo.Items)
+            if (obj is ComboBoxItem cbi && cbi.Tag is string t && t == tag) { combo.SelectedItem = cbi; return; }
     }
 
     // ---------- sampling / refresh ----------
@@ -465,9 +491,20 @@ public sealed partial class MainWindow : Window
 
     private void SpeedCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_timer is null) return;
         if (SpeedCombo.SelectedItem is ComboBoxItem cbi && cbi.Tag is string ms && int.TryParse(ms, out int millis))
-            _timer.Interval = TimeSpan.FromMilliseconds(millis);
+        {
+            if (_timer is not null) _timer.Interval = TimeSpan.FromMilliseconds(millis);
+            if (!_loadingSettings) { _settings.UpdateMs = millis; _settings.Save(); }
+        }
+    }
+
+    private void ThemeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ThemeCombo.SelectedItem is ComboBoxItem cbi && cbi.Tag is string theme)
+        {
+            ApplyTheme(theme);
+            if (!_loadingSettings) { _settings.Theme = theme; _settings.Save(); }
+        }
     }
 
     // ---------- startup apps ----------
