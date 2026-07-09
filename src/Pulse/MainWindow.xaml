@@ -32,6 +32,9 @@
         </NavigationView.FooterMenuItems>
 
         <Grid Padding="20,12,20,16">
+            <Grid.KeyboardAccelerators>
+                <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="FindAccelerator_Invoked" />
+            </Grid.KeyboardAccelerators>
             <Grid.Resources>
                 <Style x:Key="HeaderButton" TargetType="Button">
                     <Setter Property="Background" Value="Transparent" />
@@ -424,7 +427,7 @@
                     <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Padding="10,8">
+                            <Grid Padding="10,8" Background="Transparent" RightTapped="SvcRow_RightTapped">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="120" />

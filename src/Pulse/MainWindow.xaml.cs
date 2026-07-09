@@ -30,6 +30,7 @@ public sealed partial class MainWindow : Window
     private DispatcherQueueTimer? _timer;
     private bool _busy;
     private MenuFlyout _procMenu = null!;
+    private MenuFlyout _svcMenu = null!;
 
     private string _sortKey = "cpu";
     private bool _sortDesc = true;
@@ -86,6 +87,7 @@ public sealed partial class MainWindow : Window
         StyleGraph(NetLine, NetFill, _netLineBrush, _netFillBrush);
         BuildCoreTiles();
         BuildProcMenu();
+        BuildSvcMenu();
         StCores.Text = _mon.Cores.ToString();
         _cpuName = ReadCpuName();
         _osName = ReadOsName();
@@ -517,6 +519,40 @@ public sealed partial class MainWindow : Window
         if (SvcList.SelectedItem is not ServiceEntry s) return;
         await Task.Run(() => WindowsServices.Apply(action, s.Name));
         await LoadServices();
+    }
+
+    private void BuildSvcMenu()
+    {
+        _svcMenu = new MenuFlyout();
+        void Add(string text, Action act)
+        {
+            var mi = new MenuFlyoutItem { Text = text };
+            mi.Click += (_, _) => act();
+            _svcMenu.Items.Add(mi);
+        }
+        Add("Start", async () => await DoService(SvcAction.Start));
+        Add("Stop", async () => await DoService(SvcAction.Stop));
+        Add("Restart", async () => await DoService(SvcAction.Restart));
+        _svcMenu.Items.Add(new MenuFlyoutSeparator());
+        Add("Copy name", () => { if (SvcList.SelectedItem is ServiceEntry s) CopyText(s.Name); });
+        Add("Open services.msc", () => { try { Process.Start(new ProcessStartInfo("services.msc") { UseShellExecute = true }); } catch { } });
+    }
+
+    private void SvcRow_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is ServiceEntry s)
+        {
+            SvcList.SelectedItem = s;
+            _svcMenu.ShowAt(fe, new FlyoutShowOptions { Position = e.GetPosition(fe) });
+            e.Handled = true;
+        }
+    }
+
+    private void FindAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (ServicesPanel.Visibility == Visibility.Visible) SvcFilterBox.Focus(FocusState.Programmatic);
+        else if (ProcessesPanel.Visibility == Visibility.Visible) FilterBox.Focus(FocusState.Programmatic);
+        args.Handled = true;
     }
 
     // ---------- settings ----------
