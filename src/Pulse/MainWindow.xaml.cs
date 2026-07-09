@@ -439,7 +439,9 @@ public sealed partial class MainWindow : Window
         DefaultTmStatus.Text = isDefault
             ? "Pulse is currently the default Task Manager."
             : "Windows Task Manager is currently the default.";
-        AboutText.Text = "Pulse v0.1.0 — a fast, native Windows Task Manager replacement.";
+        var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        string ver = v is null ? "" : $"v{v.Major}.{v.Minor}.{v.Build}";
+        AboutText.Text = $"Pulse {ver} — a fast, native Windows Task Manager replacement.";
     }
 
     private void DefaultTmToggle_Toggled(object sender, RoutedEventArgs e)

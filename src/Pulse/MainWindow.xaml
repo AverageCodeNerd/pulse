@@ -182,6 +182,12 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="4">
                         <Grid x:Name="CpuGraphHost" Height="230" SizeChanged="CpuGraphHost_SizeChanged">
+                            <Grid IsHitTestVisible="False">
+                                <Grid.RowDefinitions><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                                <Border Grid.Row="0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                                <Border Grid.Row="1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                                <Border Grid.Row="2" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                            </Grid>
                             <Polygon x:Name="CpuFill" />
                             <Polyline x:Name="CpuLine" />
                         </Grid>
@@ -216,6 +222,10 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="4">
                         <Grid x:Name="MemGraphHost" Height="120" SizeChanged="MemGraphHost_SizeChanged">
+                            <Grid IsHitTestVisible="False">
+                                <Grid.RowDefinitions><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                                <Border Grid.Row="0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                            </Grid>
                             <Polygon x:Name="MemFill" />
                             <Polyline x:Name="MemLine" />
                         </Grid>
@@ -238,6 +248,12 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="4">
                         <Grid x:Name="GpuGraphHost" Height="200" SizeChanged="GpuGraphHost_SizeChanged">
+                            <Grid IsHitTestVisible="False">
+                                <Grid.RowDefinitions><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                                <Border Grid.Row="0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                                <Border Grid.Row="1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                                <Border Grid.Row="2" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                            </Grid>
                             <Polygon x:Name="GpuFill" />
                             <Polyline x:Name="GpuLine" />
                         </Grid>
@@ -270,6 +286,10 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="4">
                         <Grid x:Name="DiskGraphHost" Height="120" SizeChanged="DiskGraphHost_SizeChanged">
+                            <Grid IsHitTestVisible="False">
+                                <Grid.RowDefinitions><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                                <Border Grid.Row="0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                            </Grid>
                             <Polygon x:Name="DiskFill" />
                             <Polyline x:Name="DiskLine" />
                         </Grid>
@@ -298,6 +318,10 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                             CornerRadius="8" Padding="4">
                         <Grid x:Name="NetGraphHost" Height="120" SizeChanged="NetGraphHost_SizeChanged">
+                            <Grid IsHitTestVisible="False">
+                                <Grid.RowDefinitions><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+                                <Border Grid.Row="0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Opacity="0.5" />
+                            </Grid>
                             <Polygon x:Name="NetFill" />
                             <Polyline x:Name="NetLine" />
                         </Grid>
@@ -388,7 +412,7 @@
                                 <ComboBoxItem Content="High — 0.5 s" Tag="500" />
                                 <ComboBoxItem Content="Normal — 1 s" Tag="1000" IsSelected="True" />
                                 <ComboBoxItem Content="Low — 2 s" Tag="2000" />
-                                <ComboBoxItem Content="Paused — 4 s" Tag="4000" />
+                                <ComboBoxItem Content="Battery saver — 4 s" Tag="4000" />
                             </ComboBox>
                         </Grid>
                     </Border>
