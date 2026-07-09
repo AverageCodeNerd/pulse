@@ -2,7 +2,7 @@
 
 A fast, native **Windows 11 replacement for Task Manager**, built with C# / .NET WinUI 3.
 
-> Status: **working MVP.** A real WinUI 3 app (`src/Pulse/`) builds and runs with a live process list, real per-process CPU/memory/threads, total CPU & RAM, sortable columns, and End task. The HTML in `mockups/` remains the visual target for the fuller design.
+> Status: **v0.1.0 released.** A real WinUI 3 app (`src/Pulse/`) with three pages — Processes, Performance, Startup apps — is [downloadable from Releases](https://github.com/AverageCodeNerd/pulse/releases/latest). The HTML in `mockups/` remains the visual target for the fuller design.
 
 ## Repository layout
 
@@ -62,18 +62,32 @@ The marketing/download site, ready for **GitHub Pages**.
 2. Enable Pages: repo **Settings → Pages → Source: `Deploy from a branch` → Branch: `main` / folder: `/docs`**. Your site goes live at `https://AverageCodeNerd.github.io/pulse/`.
 3. (Optional) Add a custom domain in the same Pages settings.
 
-### Publishing a build
-1. Build the installer (`Pulse-Setup.exe`) — later this is automated by a GitHub Actions workflow.
-2. Create a release: **Releases → Draft a new release → tag `v0.1.0`**, then attach `Pulse-Setup.exe`.
-3. The download buttons already point at
-   `.../releases/latest/download/Pulse-Setup.exe`, so they always resolve to the newest release — no page edits needed per version.
+### Cutting a release
+Requires the .NET 8 SDK and [Inno Setup 6](https://jrsoftware.org/isinfo.php).
+
+```powershell
+# 1. Self-contained publish (bundles .NET + Windows App SDK — end users need nothing)
+cd src/Pulse
+dotnet publish Pulse.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained true -p:WindowsAppSDKSelfContained=true
+
+# 2. Package the installer (per-user, no admin) -> dist/Pulse-Setup.exe
+& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer/Pulse.iss
+
+# 3. Publish the GitHub release
+gh release create v0.1.0 dist/Pulse-Setup.exe dist/Pulse-portable-x64.zip --title "Pulse v0.1.0" --notes-file notes.md
+```
+
+The download buttons point at `.../releases/latest/download/Pulse-Setup.exe`, so they always resolve to the newest release — no page edits per version.
 
 ## Next steps
-- [x] Scaffold the WinUI 3 project and build the Processes view against real data.
-- [ ] Left-rail navigation + a **Performance** page (CPU history graph, per-core grid) to match the mockup.
+- [x] WinUI 3 project with a live Processes view against real data.
+- [x] Left-rail navigation + **Performance** page (CPU history graph, per-core grid).
+- [x] **Startup apps** page via the registry `Run` keys + Startup folders.
+- [x] App icon + self-contained installer + **v0.1.0 release** (download button works).
 - [ ] Per-process disk/network/GPU columns (needs ETW / PDH counters).
-- [ ] Startup apps via the registry `Run` keys + Startup folder.
-- [ ] App icon, and a self-contained installer + release workflow so the download page's button works.
+- [ ] Code-sign the installer (removes the SmartScreen warning).
+- [ ] winget / Scoop manifests; GitHub Actions workflow to automate releases.
+- [ ] ARM64 build.
 
 ## License
 MIT (intended).
