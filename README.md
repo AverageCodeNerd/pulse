@@ -35,6 +35,16 @@ dotnet build Pulse.csproj -c Debug -p:Platform=x64
 
 It's an *unpackaged* WinUI 3 app (`WindowsPackageType=None`), so it launches straight from the built `.exe` — no MSIX install needed during development.
 
+### Make Pulse the default Task Manager
+**Settings → Make Pulse the default Task Manager** flips a switch that redirects every way Windows opens Task Manager (Ctrl+Shift+Esc, the taskbar menu, `Run → taskmgr`) to Pulse. It works via the Image File Execution Options *Debugger* hook and needs one admin approval. The switch writes/removes this value (what you'd otherwise do by hand in `regedit`):
+
+```
+HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\taskmgr.exe
+    Debugger = "C:\path\to\Pulse.exe"   (REG_SZ)
+```
+
+Turning the switch off (or deleting that value) restores the built-in Task Manager.
+
 ### What works today
 - Live process list: name, per-process **CPU %** (from CPU-time deltas), working-set **memory**, **threads**, **PID**, responding **status**.
 - Real total **CPU %** and **RAM** with progress bars, live process count.

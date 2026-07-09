@@ -413,14 +413,59 @@ public sealed partial class MainWindow : Window
         {
             bool perf = tag == "performance";
             bool startup = tag == "startup";
-            bool proc = !perf && !startup;
+            bool settings = tag == "settings";
+            bool proc = !perf && !startup && !settings;
             _perfVisible = perf;
             if (ProcessesPanel is not null) ProcessesPanel.Visibility = proc ? Visibility.Visible : Visibility.Collapsed;
             if (PerformancePanel is not null) PerformancePanel.Visibility = perf ? Visibility.Visible : Visibility.Collapsed;
             if (StartupPanel is not null) StartupPanel.Visibility = startup ? Visibility.Visible : Visibility.Collapsed;
+            if (SettingsPanel is not null) SettingsPanel.Visibility = settings ? Visibility.Visible : Visibility.Collapsed;
             if (perf) DispatcherQueue.TryEnqueue(RedrawAll);
             if (startup) BuildStartupList();
+            if (settings) RefreshSettings();
         }
+    }
+
+    // ---------- settings ----------
+
+    private bool _tmGuard;
+
+    private void RefreshSettings()
+    {
+        bool isDefault = TaskManagerDefault.IsDefault();
+        _tmGuard = true;
+        DefaultTmToggle.IsOn = isDefault;
+        _tmGuard = false;
+        DefaultTmStatus.Text = isDefault
+            ? "Pulse is currently the default Task Manager."
+            : "Windows Task Manager is currently the default.";
+        AboutText.Text = "Pulse v0.1.0 — a fast, native Windows Task Manager replacement.";
+    }
+
+    private void DefaultTmToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_tmGuard) return;
+        bool want = DefaultTmToggle.IsOn;
+        DefaultTmStatus.Text = "Waiting for administrator approval…";
+        bool ok = TaskManagerDefault.Apply(want);
+        if (!ok)
+        {
+            _tmGuard = true;
+            DefaultTmToggle.IsOn = TaskManagerDefault.IsDefault();
+            _tmGuard = false;
+            DefaultTmStatus.Text = "Change cancelled or blocked — administrator approval is required.";
+            return;
+        }
+        DefaultTmStatus.Text = want
+            ? "Done. Task Manager shortcuts now open Pulse."
+            : "Done. The built-in Task Manager is restored.";
+    }
+
+    private void SpeedCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_timer is null) return;
+        if (SpeedCombo.SelectedItem is ComboBoxItem cbi && cbi.Tag is string ms && int.TryParse(ms, out int millis))
+            _timer.Interval = TimeSpan.FromMilliseconds(millis);
     }
 
     // ---------- startup apps ----------

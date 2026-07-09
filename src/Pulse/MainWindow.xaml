@@ -22,6 +22,11 @@
                 <NavigationViewItem.Icon><FontIcon Glyph="&#xE7B5;" /></NavigationViewItem.Icon>
             </NavigationViewItem>
         </NavigationView.MenuItems>
+        <NavigationView.FooterMenuItems>
+            <NavigationViewItem Content="Settings" Tag="settings">
+                <NavigationViewItem.Icon><FontIcon Glyph="&#xE713;" /></NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.FooterMenuItems>
 
         <Grid Padding="20,12,20,16">
             <Grid.Resources>
@@ -336,6 +341,71 @@
                     <StackPanel x:Name="StartupList" Spacing="0" />
                 </ScrollViewer>
             </Grid>
+
+            <!-- ===================== SETTINGS ===================== -->
+            <ScrollViewer x:Name="SettingsPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Left">
+                    <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" />
+
+                    <!-- Default Task Manager -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <StackPanel Spacing="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Spacing="3">
+                                    <TextBlock Text="Make Pulse the default Task Manager" FontSize="15" FontWeight="SemiBold" />
+                                    <TextBlock TextWrapping="Wrap" FontSize="12.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               Text="Opening Task Manager anywhere in Windows — Ctrl+Shift+Esc, the taskbar menu, Run → taskmgr — launches Pulse instead. This edits the registry (Image File Execution Options) and needs administrator approval. Turn it off to restore the built-in Task Manager." />
+                                </StackPanel>
+                                <ToggleSwitch x:Name="DefaultTmToggle" Grid.Column="1" VerticalAlignment="Center"
+                                              OnContent="On" OffContent="Off" Toggled="DefaultTmToggle_Toggled" />
+                            </Grid>
+                            <TextBlock x:Name="DefaultTmStatus" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Update speed -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="3">
+                                <TextBlock Text="Update speed" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Text="How often the live figures and graphs refresh." FontSize="12.5"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ComboBox x:Name="SpeedCombo" Grid.Column="1" VerticalAlignment="Center" MinWidth="150"
+                                      SelectionChanged="SpeedCombo_SelectionChanged">
+                                <ComboBoxItem Content="High — 0.5 s" Tag="500" />
+                                <ComboBoxItem Content="Normal — 1 s" Tag="1000" IsSelected="True" />
+                                <ComboBoxItem Content="Low — 2 s" Tag="2000" />
+                                <ComboBoxItem Content="Paused — 4 s" Tag="4000" />
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- About -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="About" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock x:Name="AboutText" FontSize="12.5" Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Text="Pulse — a fast, native Windows Task Manager replacement." />
+                            <HyperlinkButton Content="github.com/AverageCodeNerd/pulse" NavigateUri="https://github.com/AverageCodeNerd/pulse" Padding="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </NavigationView>
 </Window>
