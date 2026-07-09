@@ -6,10 +6,12 @@
 *.user
 .vs/
 
-# Installer artifacts
+# Installer / release artifacts
+dist/
 *.exe
 *.msix
 *.msixbundle
+*.zip
 
 # OS
 Thumbs.db
