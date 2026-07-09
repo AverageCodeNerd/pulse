@@ -2,7 +2,7 @@
 
 A fast, native **Windows 11 replacement for Task Manager**, built with C# / .NET WinUI 3.
 
-> Status: **v0.1.0 released.** A real WinUI 3 app (`src/Pulse/`) with three pages — Processes, Performance, Startup apps — is [downloadable from Releases](https://github.com/AverageCodeNerd/pulse/releases/latest). The HTML in `mockups/` remains the visual target for the fuller design.
+> Status: **v0.2.1.** A real WinUI 3 app (`src/Pulse/`) with four pages — Processes, Performance (CPU, per-core, GPU/power/temps, disk, network), Startup apps, and Settings (incl. "make Pulse the default Task Manager") — is [downloadable from Releases](https://github.com/AverageCodeNerd/pulse/releases/latest). The HTML in `mockups/` remains the visual target for the fuller design.
 
 ## Repository layout
 
@@ -84,7 +84,7 @@ dotnet publish Pulse.csproj -c Release -p:Platform=x64 -r win-x64 --self-contain
 & "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer/Pulse.iss
 
 # 3. Publish the GitHub release
-gh release create v0.1.0 dist/Pulse-Setup.exe dist/Pulse-portable-x64.zip --title "Pulse v0.1.0" --notes-file notes.md
+gh release create v0.2.1 dist/Pulse-Setup.exe dist/Pulse-portable-x64.zip --title "Pulse v0.2.1" --notes-file notes.md
 ```
 
 The download buttons point at `.../releases/latest/download/Pulse-Setup.exe`, so they always resolve to the newest release — no page edits per version.
@@ -93,8 +93,11 @@ The download buttons point at `.../releases/latest/download/Pulse-Setup.exe`, so
 - [x] WinUI 3 project with a live Processes view against real data.
 - [x] Left-rail navigation + **Performance** page (CPU history graph, per-core grid).
 - [x] **Startup apps** page via the registry `Run` keys + Startup folders.
-- [x] App icon + self-contained installer + **v0.1.0 release** (download button works).
+- [x] **GPU / power / temperature** (NVML) + disk & network graphs on Performance.
+- [x] **Settings** page + "make Pulse the default Task Manager" (IFEO hook).
+- [x] App icon + self-contained installer + release (download button works).
 - [ ] Per-process disk/network/GPU columns (needs ETW / PDH counters).
+- [ ] CPU package power/temperature (needs a signed kernel driver, e.g. LibreHardwareMonitor).
 - [ ] Code-sign the installer (removes the SmartScreen warning).
 - [ ] winget / Scoop manifests; GitHub Actions workflow to automate releases.
 - [ ] ARM64 build.
