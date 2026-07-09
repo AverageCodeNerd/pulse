@@ -2,23 +2,44 @@
 
 A fast, native **Windows 11 replacement for Task Manager**, built with C# / .NET WinUI 3.
 
-> Status: **design mockup stage.** The UI/UX is prototyped in HTML (`mockups/`) as the visual spec. The real WinUI 3 app has not been built yet.
+> Status: **working MVP.** A real WinUI 3 app (`src/Pulse/`) builds and runs with a live process list, real per-process CPU/memory/threads, total CPU & RAM, sortable columns, and End task. The HTML in `mockups/` remains the visual target for the fuller design.
 
 ## Repository layout
 
 ```
 Pulse/
+├─ src/Pulse/       → WinUI 3 app (the real thing)
 ├─ docs/            → GitHub Pages download/landing site (docs/index.html)
 ├─ mockups/         → Clickable HTML prototype of the app UI (visual spec)
 └─ README.md
 ```
 
-Later, the real app lives alongside these:
+### `src/Pulse/` — the app
+```
+App.xaml(.cs)            → app entry point
+MainWindow.xaml(.cs)     → the window: stat cards, toolbar, process list
+Models/ProcessInfo.cs    → one process row (INotifyPropertyChanged)
+Services/SystemMonitor.cs→ process sampling + CPU%/RAM math + End task
+Services/Native.cs       → GlobalMemoryStatusEx P/Invoke for total/used RAM
+```
 
+## Build & run
+
+Requires the .NET 8 SDK and the Windows App Runtime 1.8 (already present on the dev machine).
+
+```powershell
+cd src/Pulse
+dotnet build Pulse.csproj -c Debug -p:Platform=x64
+./bin/x64/Debug/net8.0-windows10.0.19041.0/Pulse.exe
 ```
-├─ src/Pulse/       → WinUI 3 app (App.xaml, MainWindow.xaml, Views/, Services/)
-└─ .github/workflows/release.yml → builds the installer, attaches to Releases
-```
+
+It's an *unpackaged* WinUI 3 app (`WindowsPackageType=None`), so it launches straight from the built `.exe` — no MSIX install needed during development.
+
+### What works today
+- Live process list: name, per-process **CPU %** (from CPU-time deltas), working-set **memory**, **threads**, **PID**, responding **status**.
+- Real total **CPU %** and **RAM** with progress bars, live process count.
+- Click any column header to **sort** (toggles asc/desc); **End task** button + double-click to kill.
+- Native Mica backdrop, follows the system light/dark theme.
 
 ## The two deliverables so far
 
@@ -48,11 +69,11 @@ The marketing/download site, ready for **GitHub Pages**.
    `.../releases/latest/download/Pulse-Setup.exe`, so they always resolve to the newest release — no page edits needed per version.
 
 ## Next steps
-- [ ] Get sign-off on the mockup look & layout.
-- [ ] Scaffold the WinUI 3 project (`src/Pulse`) and rebuild the Processes view against real data (`System.Diagnostics` / performance counters).
-- [ ] Wire Performance counters and the per-core CPU grid.
+- [x] Scaffold the WinUI 3 project and build the Processes view against real data.
+- [ ] Left-rail navigation + a **Performance** page (CPU history graph, per-core grid) to match the mockup.
+- [ ] Per-process disk/network/GPU columns (needs ETW / PDH counters).
 - [ ] Startup apps via the registry `Run` keys + Startup folder.
-- [ ] Packaging (MSIX or self-contained installer) + release workflow.
+- [ ] App icon, and a self-contained installer + release workflow so the download page's button works.
 
 ## License
 MIT (intended).
