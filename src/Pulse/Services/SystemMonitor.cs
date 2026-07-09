@@ -96,6 +96,26 @@ public sealed class SystemMonitor
         }
     }
 
+    /// <summary>Extra, on-demand detail for one process (path, start time, publisher).</summary>
+    public ProcessDetails GetDetails(int pid)
+    {
+        string? path = null, company = null, description = null;
+        DateTime? started = null;
+        try
+        {
+            using var p = Process.GetProcessById(pid);
+            try { path = p.MainModule?.FileName; } catch { }
+            try { started = p.StartTime; } catch { }
+        }
+        catch { }
+        if (path is not null)
+        {
+            try { var fi = FileVersionInfo.GetVersionInfo(path); company = fi.CompanyName; description = fi.FileDescription; }
+            catch { }
+        }
+        return new ProcessDetails(path, started, company, description);
+    }
+
     /// <summary>Full path to a process's executable, or null if inaccessible.</summary>
     public string? GetPath(int pid)
     {

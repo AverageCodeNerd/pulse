@@ -631,7 +631,56 @@ public sealed partial class MainWindow : Window
     private void ProcList_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
         EndBtn.IsEnabled = ProcList.SelectedItem is ProcessInfo;
 
-    private void ProcList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => EndSelected();
+    private void ProcList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (ProcList.SelectedItem is ProcessInfo pi) _ = ShowDetails(pi);
+    }
+
+    private async Task ShowDetails(ProcessInfo pi)
+    {
+        var d = _mon.GetDetails(pi.Pid);
+        var grid = new Grid { RowSpacing = 7, ColumnSpacing = 16, MinWidth = 420 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        int row = 0;
+        var secondary = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+        void Add(string key, string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            var k = new TextBlock { Text = key, Foreground = secondary, FontSize = 12.5 };
+            var v = new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap, FontSize = 12.5, IsTextSelectionEnabled = true };
+            Grid.SetRow(k, row); Grid.SetRow(v, row); Grid.SetColumn(v, 1);
+            grid.Children.Add(k); grid.Children.Add(v);
+            row++;
+        }
+        Add("Name", pi.Name);
+        Add("Description", d.Description);
+        Add("Publisher", d.Company);
+        Add("Status", pi.Status);
+        Add("PID", pi.Pid.ToString());
+        Add("Threads", pi.Threads.ToString());
+        Add("Memory", pi.MemText);
+        Add("Started", d.Started?.ToString("yyyy-MM-dd HH:mm:ss"));
+        Add("Path", d.Path ?? "(unavailable — process may be protected)");
+
+        var dlg = new ContentDialog
+        {
+            Title = "Process details",
+            Content = grid,
+            CloseButtonText = "Close",
+            XamlRoot = this.Content.XamlRoot,
+        };
+        if (d.Path is not null)
+        {
+            dlg.PrimaryButtonText = "Open file location";
+            dlg.PrimaryButtonClick += (_, _) =>
+            {
+                try { Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{d.Path}\"") { UseShellExecute = true }); } catch { }
+            };
+        }
+        await dlg.ShowAsync();
+    }
 
     private void ProcList_KeyDown(object sender, KeyRoutedEventArgs e)
     {
@@ -649,6 +698,7 @@ public sealed partial class MainWindow : Window
             mi.Click += (_, _) => act();
             _procMenu.Items.Add(mi);
         }
+        Add("Details", () => { if (ProcList.SelectedItem is ProcessInfo p) _ = ShowDetails(p); });
         Add("End task", EndSelected);
         Add("Restart", RestartSelected);
         Add("Open file location", OpenFileLocation);
