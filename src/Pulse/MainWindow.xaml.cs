@@ -36,6 +36,9 @@ public sealed partial class MainWindow : Window
     private bool _perfVisible;
     private string _filter = "";
     private Snapshot? _lastSnap;
+    private readonly ObservableCollection<ServiceEntry> _services = new();
+    private List<ServiceEntry> _allServices = new();
+    private string _svcFilter = "";
 
     private const int HistN = 60;   // seconds of history for the big graphs
     private const int CoreN = 40;   // samples per core tile
@@ -72,6 +75,7 @@ public sealed partial class MainWindow : Window
         try { this.AppWindow?.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "pulse.ico")); } catch { }
 
         ProcList.ItemsSource = _processes;
+        SvcList.ItemsSource = _services;
         for (int i = 0; i < HistN; i++) { _cpuHist.Add(0); _memHist.Add(0); _gpuHist.Add(0); _diskHist.Add(0); _netHist.Add(0); }
 
         BuildBrushes();
@@ -453,17 +457,66 @@ public sealed partial class MainWindow : Window
         {
             bool perf = tag == "performance";
             bool startup = tag == "startup";
+            bool services = tag == "services";
             bool settings = tag == "settings";
-            bool proc = !perf && !startup && !settings;
+            bool proc = !perf && !startup && !services && !settings;
             _perfVisible = perf;
             if (ProcessesPanel is not null) ProcessesPanel.Visibility = proc ? Visibility.Visible : Visibility.Collapsed;
             if (PerformancePanel is not null) PerformancePanel.Visibility = perf ? Visibility.Visible : Visibility.Collapsed;
             if (StartupPanel is not null) StartupPanel.Visibility = startup ? Visibility.Visible : Visibility.Collapsed;
+            if (ServicesPanel is not null) ServicesPanel.Visibility = services ? Visibility.Visible : Visibility.Collapsed;
             if (SettingsPanel is not null) SettingsPanel.Visibility = settings ? Visibility.Visible : Visibility.Collapsed;
             if (perf) DispatcherQueue.TryEnqueue(RedrawAll);
             if (startup) BuildStartupList();
+            if (services) _ = LoadServices();
             if (settings) RefreshSettings();
         }
+    }
+
+    // ---------- services ----------
+
+    private async Task LoadServices()
+    {
+        SvcCount.Text = "loading…";
+        _allServices = await Task.Run(WindowsServices.List);
+        ApplyServiceFilter();
+    }
+
+    private void ApplyServiceFilter()
+    {
+        IEnumerable<ServiceEntry> q = _allServices;
+        if (_svcFilter.Length > 0)
+            q = q.Where(s => s.DisplayName.Contains(_svcFilter, StringComparison.OrdinalIgnoreCase)
+                          || s.Name.Contains(_svcFilter, StringComparison.OrdinalIgnoreCase));
+        _services.Clear();
+        foreach (var s in q) _services.Add(s);
+        SvcCount.Text = $"{_services.Count} services";
+    }
+
+    private void SvcFilterBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        _svcFilter = SvcFilterBox.Text?.Trim() ?? "";
+        ApplyServiceFilter();
+    }
+
+    private void SvcList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var s = SvcList.SelectedItem as ServiceEntry;
+        SvcStartBtn.IsEnabled = s is { IsStopped: true };
+        SvcStopBtn.IsEnabled = s is { IsRunning: true, CanStop: true };
+        SvcRestartBtn.IsEnabled = s is { IsRunning: true };
+    }
+
+    private async void SvcStart_Click(object sender, RoutedEventArgs e) => await DoService(SvcAction.Start);
+    private async void SvcStop_Click(object sender, RoutedEventArgs e) => await DoService(SvcAction.Stop);
+    private async void SvcRestart_Click(object sender, RoutedEventArgs e) => await DoService(SvcAction.Restart);
+    private async void SvcRefresh_Click(object sender, RoutedEventArgs e) => await LoadServices();
+
+    private async Task DoService(SvcAction action)
+    {
+        if (SvcList.SelectedItem is not ServiceEntry s) return;
+        await Task.Run(() => WindowsServices.Apply(action, s.Name));
+        await LoadServices();
     }
 
     // ---------- settings ----------

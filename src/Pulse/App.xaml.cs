@@ -24,6 +24,21 @@ public partial class App : Application
             return;
         }
 
+        // Elevated relaunch to start/stop/restart a service, then exit.
+        int svcIdx = Array.FindIndex(argv, a => a is WindowsServices.StartFlag or WindowsServices.StopFlag or WindowsServices.RestartFlag);
+        if (svcIdx >= 0 && svcIdx + 1 < argv.Length)
+        {
+            var action = argv[svcIdx] switch
+            {
+                WindowsServices.StartFlag => SvcAction.Start,
+                WindowsServices.StopFlag => SvcAction.Stop,
+                _ => SvcAction.Restart,
+            };
+            try { WindowsServices.ApplyElevated(action, argv[svcIdx + 1]); } catch { }
+            this.Exit();
+            return;
+        }
+
         _window = new MainWindow();
         _window.Activate();
     }

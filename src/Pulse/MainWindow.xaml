@@ -21,6 +21,9 @@
             <NavigationViewItem Content="Startup apps" Tag="startup">
                 <NavigationViewItem.Icon><FontIcon Glyph="&#xE7B5;" /></NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Services" Tag="services">
+                <NavigationViewItem.Icon><FontIcon Glyph="&#xE90F;" /></NavigationViewItem.Icon>
+            </NavigationViewItem>
         </NavigationView.MenuItems>
         <NavigationView.FooterMenuItems>
             <NavigationViewItem Content="Settings" Tag="settings">
@@ -369,6 +372,72 @@
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                     <StackPanel x:Name="StartupList" Spacing="0" />
                 </ScrollViewer>
+            </Grid>
+
+            <!-- ===================== SERVICES ===================== -->
+            <Grid x:Name="ServicesPanel" Visibility="Collapsed" RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="Services" FontSize="22" FontWeight="SemiBold" />
+                    <TextBlock Text="Windows services and their state. Starting, stopping or restarting needs administrator approval."
+                               FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+                <Grid Grid.Row="1" ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="SvcCount" Grid.Column="0" VerticalAlignment="Center"
+                               Text="—" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBox x:Name="SvcFilterBox" Grid.Column="1" HorizontalAlignment="Left" MinWidth="200" MaxWidth="320"
+                             PlaceholderText="Filter services" TextChanged="SvcFilterBox_TextChanged" />
+                    <Button x:Name="SvcStartBtn" Grid.Column="2" Content="Start" IsEnabled="False" Click="SvcStart_Click" />
+                    <Button x:Name="SvcStopBtn" Grid.Column="3" Content="Stop" IsEnabled="False" Click="SvcStop_Click" />
+                    <Button x:Name="SvcRestartBtn" Grid.Column="4" Content="Restart" IsEnabled="False" Click="SvcRestart_Click" />
+                    <Button x:Name="SvcRefreshBtn" Grid.Column="5" Content="Refresh" Click="SvcRefresh_Click" />
+                </Grid>
+                <Border Grid.Row="2" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1" Padding="10,0,10,4">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="150" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Name" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Grid.Column="1" Text="Status" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Grid.Column="2" Text="Startup type" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                </Border>
+                <ListView x:Name="SvcList" Grid.Row="3" SelectionMode="Single"
+                          ItemContainerStyle="{StaticResource StretchItem}"
+                          SelectionChanged="SvcList_SelectionChanged">
+                    <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="10,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="150" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding Status}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{Binding StartType}" VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
             </Grid>
 
             <!-- ===================== SETTINGS ===================== -->
