@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -29,6 +30,8 @@ public sealed partial class MainWindow : Window
     private string _sortKey = "cpu";
     private bool _sortDesc = true;
     private bool _perfVisible;
+    private string _filter = "";
+    private Snapshot? _lastSnap;
 
     private const int HistN = 60;   // seconds of history for the big graphs
     private const int CoreN = 40;   // samples per core tile
@@ -119,6 +122,7 @@ public sealed partial class MainWindow : Window
         {
             var snap = await Task.Run(_mon.SampleRaw); // heavy enumeration off the UI thread
 
+            _lastSnap = snap;
             ApplyProcesses(snap);
 
             CpuValue.Text = snap.TotalCpu.ToString("0") + "%";
@@ -164,6 +168,9 @@ public sealed partial class MainWindow : Window
         }
         foreach (var pid in _map.Keys.Where(k => !seen.Contains(k)).ToList())
             _map.Remove(pid);
+
+        if (_filter.Length > 0)
+            list = list.Where(p => p.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase)).ToList();
 
         Sync(SortList(list));
     }
@@ -573,6 +580,48 @@ public sealed partial class MainWindow : Window
             else { _sortKey = key; _sortDesc = key != "name"; }
             _ = RefreshAsync();
         }
+    }
+
+    private void FilterBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        _filter = FilterBox.Text?.Trim() ?? "";
+        if (_lastSnap is not null) ApplyProcesses(_lastSnap);
+    }
+
+    private async void RunNewTask_Click(object sender, RoutedEventArgs e)
+    {
+        var input = new TextBox { PlaceholderText = "e.g. notepad, cmd, or C:\\path\\to\\app.exe" };
+        var body = new StackPanel { Spacing = 8 };
+        body.Children.Add(new TextBlock { Text = "Type a program, folder, document or website to open.", TextWrapping = TextWrapping.Wrap });
+        body.Children.Add(input);
+        var dlg = new ContentDialog
+        {
+            Title = "Run new task",
+            Content = body,
+            PrimaryButtonText = "Run",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = this.Content.XamlRoot,
+        };
+        if (await dlg.ShowAsync() == ContentDialogResult.Primary)
+        {
+            string cmd = input.Text?.Trim() ?? "";
+            if (cmd.Length == 0) return;
+            try { Process.Start(new ProcessStartInfo(cmd) { UseShellExecute = true }); }
+            catch (Exception ex) { await ShowInfo("Couldn't run that", $"“{cmd}” could not be started.\n\n{ex.Message}"); }
+        }
+    }
+
+    private async Task ShowInfo(string title, string message)
+    {
+        var dlg = new ContentDialog
+        {
+            Title = title,
+            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+            CloseButtonText = "OK",
+            XamlRoot = this.Content.XamlRoot,
+        };
+        await dlg.ShowAsync();
     }
 
     private void ProcList_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
