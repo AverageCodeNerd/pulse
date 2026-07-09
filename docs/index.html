@@ -218,7 +218,7 @@
     <div class="cta-row">
       <a class="btn-primary" href="https://github.com/AverageCodeNerd/pulse/releases/latest/download/Pulse-Setup.exe">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-        <span>Download for Windows<br><small>Free installer · x64 &amp; ARM64</small></span>
+        <span>Download for Windows<br><small>Free installer · 64-bit · v0.1.0</small></span>
       </a>
       <a class="btn-secondary" href="https://github.com/AverageCodeNerd/pulse/releases">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>
@@ -226,8 +226,8 @@
       </a>
     </div>
     <div class="meta">
-      <span><b>~6 MB</b> installer</span>
-      <span><b>&lt;40 MB</b> RAM at idle</span>
+      <span><b>56 MB</b> installer</span>
+      <span><b>Self-contained</b> — no runtime needed</span>
       <span>No telemetry</span>
       <span>MIT licensed</span>
     </div>
@@ -247,9 +247,9 @@
 
   <!-- STATS -->
   <div class="stats-strip">
-    <div class="cell"><div class="n grad">6 MB</div><div class="l">Installer size</div></div>
-    <div class="cell"><div class="n">&lt;0.3s</div><div class="l">Cold start</div></div>
-    <div class="cell"><div class="n">1200ms</div><div class="l">Live refresh</div></div>
+    <div class="cell"><div class="n grad">3</div><div class="l">Views: Processes · Performance · Startup</div></div>
+    <div class="cell"><div class="n">1s</div><div class="l">Live refresh</div></div>
+    <div class="cell"><div class="n">16</div><div class="l">Per-core CPU graphs</div></div>
     <div class="cell"><div class="n">0</div><div class="l">Trackers</div></div>
   </div>
 
@@ -280,12 +280,10 @@
       <table>
         <thead><tr><th>&nbsp;</th><th>Pulse</th><th>Windows Task Manager</th></tr></thead>
         <tbody>
-          <tr><td>Cold start time</td><td>&lt;0.3s</td><td>1–3s</td></tr>
-          <tr><td>Idle memory</td><td>&lt;40 MB</td><td>~90 MB</td></tr>
-          <tr><td>Per-core CPU grid</td><td class="yes">✓ Always visible</td><td>Right-click to enable</td></tr>
-          <tr><td>Heat-mapped columns</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Startup impact toggles</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>Custom graph colors &amp; theme</td><td class="yes">✓</td><td class="no">✗</td></tr>
+          <tr><td>Live processes (CPU / memory / threads)</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Per-logical-core CPU graphs</td><td class="yes">✓ Always visible</td><td>Right-click to enable</td></tr>
+          <tr><td>Startup apps manager</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Disk / Network / GPU per process</td><td class="no">Planned</td><td class="yes">✓</td></tr>
           <tr><td>Open source</td><td class="yes">✓ MIT</td><td class="no">✗</td></tr>
           <tr><td>Telemetry</td><td class="yes">None</td><td class="no">Yes</td></tr>
         </tbody>
@@ -298,16 +296,16 @@
     <div class="center">
       <span class="kicker">Get started in a minute</span>
       <h2>Install Pulse</h2>
-      <p class="lead">Two ways to install. The signed installer is easiest; the package managers are great if you live in the terminal.</p>
+      <p class="lead">Two ways to run it. The installer is easiest; the portable zip needs no install at all.</p>
     </div>
     <div class="install-grid">
       <div class="install-card">
         <h3>Installer <span class="rec">Recommended</span></h3>
         <ol class="steps">
           <li>Download <b>Pulse-Setup.exe</b> from the latest release.</li>
-          <li>Run it — if SmartScreen appears, click <b>More info → Run anyway</b>.</li>
-          <li>Pulse installs and offers to <b>replace Ctrl+Shift+Esc</b> as your default.</li>
-          <li>That's it. Pin it to your taskbar and you're done.</li>
+          <li>Run it — if SmartScreen warns "unknown publisher," click <b>More info → Run anyway</b> (this build isn't code-signed yet).</li>
+          <li>It installs per-user — <b>no admin prompt</b> — and adds a Start-menu shortcut.</li>
+          <li>Pin it to your taskbar and you're done.</li>
         </ol>
         <a class="btn-primary" style="margin-top:20px;" href="https://github.com/AverageCodeNerd/pulse/releases/latest/download/Pulse-Setup.exe">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
@@ -315,16 +313,19 @@
         </a>
       </div>
       <div class="install-card">
-        <h3>Package managers</h3>
-        <p style="color:var(--text-2); font-size:14.5px; margin:8px 0 0;">Prefer the command line? Pulse ships to winget and Scoop with every release.</p>
-        <div class="code"><span class="c"># Windows Package Manager</span><br>winget install Pulse.SystemManager<br><br><span class="c"># or with Scoop</span><br>scoop bucket add extras<br>scoop install pulse</div>
+        <h3>Portable</h3>
+        <p style="color:var(--text-2); font-size:14.5px; margin:8px 0 0;">No installer. Unzip anywhere and run <b>Pulse.exe</b> — nothing is written outside the folder.</p>
+        <div class="code"><span class="c"># download, unzip, run</span><br>Pulse-portable-x64.zip<br>&nbsp;&nbsp;└─ Pulse.exe</div>
         <div class="req">
           <span>Windows 10 20H2+ / 11</span>
-          <span>x64 &amp; ARM64</span>
-          <span>No .NET runtime needed*</span>
-          <span>~6 MB download</span>
+          <span>x64</span>
+          <span>Self-contained — no .NET / WinAppSDK needed</span>
         </div>
-        <p style="color:var(--text-3); font-size:12px; margin-top:12px;">*Ships self-contained. Requires admin rights only to end system-level processes.</p>
+        <a class="btn-secondary" style="margin-top:18px;" href="https://github.com/AverageCodeNerd/pulse/releases/latest/download/Pulse-portable-x64.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          Download portable zip
+        </a>
+        <p style="color:var(--text-3); font-size:12px; margin-top:12px;">Admin rights are only needed to end system-level processes. winget &amp; Scoop packages are planned.</p>
       </div>
     </div>
   </section>
