@@ -2,7 +2,7 @@
 
 A fast, native **Windows 11 replacement for Task Manager**, built with C# / .NET WinUI 3.
 
-> Status: **v0.2.1.** A real WinUI 3 app (`src/Pulse/`) with four pages — Processes, Performance (CPU, per-core, GPU/power/temps, disk, network), Startup apps, and Settings (incl. "make Pulse the default Task Manager") — is [downloadable from Releases](https://github.com/AverageCodeNerd/pulse/releases/latest). The HTML in `mockups/` remains the visual target for the fuller design.
+> Status: **v0.3.0.** A real WinUI 3 app (`src/Pulse/`) with four pages — Processes (filter, right-click actions, details), Performance (CPU, per-core, GPU/power/temps, disk, network), Startup apps, and Settings (appearance, update speed, "make Pulse the default Task Manager") — is [downloadable from Releases](https://github.com/AverageCodeNerd/pulse/releases/latest). The HTML in `mockups/` remains the visual target for the fuller design.
 
 ## Repository layout
 
@@ -84,7 +84,7 @@ dotnet publish Pulse.csproj -c Release -p:Platform=x64 -r win-x64 --self-contain
 & "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer/Pulse.iss
 
 # 3. Publish the GitHub release
-gh release create v0.2.1 dist/Pulse-Setup.exe dist/Pulse-portable-x64.zip --title "Pulse v0.2.1" --notes-file notes.md
+gh release create v0.3.0 dist/Pulse-Setup.exe dist/Pulse-portable-x64.zip --title "Pulse v0.3.0" --notes-file notes.md
 ```
 
 The download buttons point at `.../releases/latest/download/Pulse-Setup.exe`, so they always resolve to the newest release — no page edits per version.
@@ -96,6 +96,8 @@ The download buttons point at `.../releases/latest/download/Pulse-Setup.exe`, so
 - [x] **GPU / power / temperature** (NVML) + disk & network graphs on Performance.
 - [x] **Settings** page + "make Pulse the default Task Manager" (IFEO hook).
 - [x] App icon + self-contained installer + release (download button works).
+- [x] Process filter, Run new task, right-click actions (Restart / Open location / Copy), details dialog, Delete shortcut.
+- [x] Persisted settings + light/dark/system appearance.
 - [ ] Per-process disk/network/GPU columns (needs ETW / PDH counters).
 - [ ] CPU package power/temperature (needs a signed kernel driver, e.g. LibreHardwareMonitor).
 - [ ] Code-sign the installer (removes the SmartScreen warning).
