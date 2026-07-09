@@ -218,7 +218,7 @@
     <div class="cta-row">
       <a class="btn-primary" href="https://github.com/AverageCodeNerd/pulse/releases/latest/download/Pulse-Setup.exe">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-        <span>Download for Windows<br><small>Free installer · 64-bit · v0.3.0</small></span>
+        <span>Download for Windows<br><small>Free installer · 64-bit · v0.4.0</small></span>
       </a>
       <a class="btn-secondary" href="https://github.com/AverageCodeNerd/pulse/releases">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>
@@ -264,7 +264,7 @@
       <div class="card"><div class="ico" style="background:var(--cpu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg></div><h3>Live process list</h3><p>Every process with live CPU, memory, threads, PID and status. Sort any column, filter by name, right-click for Restart / Open file location / Copy, and double-click for full details.</p></div>
       <div class="card"><div class="ico" style="background:var(--gpu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 5-8 4 5"/></svg></div><h3>Performance graphs</h3><p>A full-history CPU graph with a per-logical-core grid, plus memory, GPU, disk and network — each with its own live, gridded graph.</p></div>
       <div class="card"><div class="ico" style="background:#e0555f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V5a2 2 0 0 0-4 0v9.76a4 4 0 1 0 4 0z"/></svg></div><h3>GPU, power &amp; temps</h3><p>On NVIDIA cards, read utilization, memory, temperature, power draw in watts, core clock and fan speed straight from the driver — figures Task Manager never shows.</p></div>
-      <div class="card"><div class="ico" style="background:var(--disk)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10M8 7l4-4 4 4M5 15v4h14v-4"/></svg></div><h3>Startup control</h3><p>See every startup app — from the Run keys and Startup folders — with its publisher, and flip user-scoped ones on or off with a single toggle.</p></div>
+      <div class="card"><div class="ico" style="background:var(--disk)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10M8 7l4-4 4 4M5 15v4h14v-4"/></svg></div><h3>Startup &amp; services</h3><p>Manage every startup app (Run keys and Startup folders) with its publisher, and browse all Windows services — start, stop or restart any of them right from Pulse.</p></div>
       <div class="card"><div class="ico" style="background:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg></div><h3>Be your default</h3><p>One switch in Settings makes Ctrl+Shift+Esc, the taskbar menu and Run&nbsp;→&nbsp;taskmgr all open Pulse instead. Fully reversible — flip it back anytime.</p></div>
       <div class="card"><div class="ico" style="background:#5a6472"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Private &amp; open</h3><p>No accounts, no telemetry, no network calls. Open source under MIT so you can read exactly what it does. It runs on your machine, for you.</p></div>
     </div>
@@ -285,6 +285,8 @@
           <tr><td>GPU power, temperature &amp; clocks</td><td class="yes">✓ NVIDIA</td><td class="no">✗</td></tr>
           <tr><td>Disk &amp; network graphs</td><td class="yes">✓</td><td class="yes">✓</td></tr>
           <tr><td>Startup apps manager</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Services (start / stop / restart)</td><td class="yes">✓</td><td>Opens services.msc</td></tr>
+          <tr><td>Always on top</td><td class="yes">✓</td><td class="no">✗</td></tr>
           <tr><td>Set as default Task Manager</td><td class="yes">✓ Built-in</td><td class="no">n/a</td></tr>
           <tr><td>Per-process disk / network / GPU</td><td class="no">Planned</td><td class="yes">✓</td></tr>
           <tr><td>Open source</td><td class="yes">✓ MIT</td><td class="no">✗</td></tr>
