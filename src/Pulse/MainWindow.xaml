@@ -152,6 +152,13 @@
             <!-- ===================== PERFORMANCE ===================== -->
             <ScrollViewer x:Name="PerformancePanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="16">
+                    <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="14,10">
+                        <TextBlock x:Name="SysInfoText" Text="" FontSize="12.5" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Border>
+
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -208,6 +215,95 @@
                             <Polyline x:Name="MemLine" />
                         </Grid>
                     </Border>
+
+                    <!-- GPU -->
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="GpuTitle" Text="GPU" FontSize="22" FontWeight="SemiBold" />
+                            <TextBlock x:Name="GpuSub" Text="% Utilization over 60s" FontSize="12"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <TextBlock x:Name="StGpuValue" Grid.Column="1" Text="0%" FontSize="34" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </Grid>
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="4">
+                        <Grid x:Name="GpuGraphHost" Height="200" SizeChanged="GpuGraphHost_SizeChanged">
+                            <Polygon x:Name="GpuFill" />
+                            <Polyline x:Name="GpuLine" />
+                        </Grid>
+                    </Border>
+                    <Grid ColumnSpacing="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0"><TextBlock Text="UTILIZATION" Style="{StaticResource StatKey}" /><TextBlock x:Name="StGpuUtil" Text="—" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock Text="MEMORY" Style="{StaticResource StatKey}" /><TextBlock x:Name="StGpuMem" Text="—" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock Text="TEMPERATURE" Style="{StaticResource StatKey}" /><TextBlock x:Name="StGpuTemp" Text="—" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="3"><TextBlock Text="POWER" Style="{StaticResource StatKey}" /><TextBlock x:Name="StGpuPower" Text="—" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="4"><TextBlock Text="CORE CLOCK" Style="{StaticResource StatKey}" /><TextBlock x:Name="StGpuClock" Text="—" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="5"><TextBlock Text="FAN" Style="{StaticResource StatKey}" /><TextBlock x:Name="StGpuFan" Text="—" Style="{StaticResource StatVal}" /></StackPanel>
+                    </Grid>
+
+                    <!-- Disk -->
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Disk" FontSize="22" FontWeight="SemiBold" />
+                            <TextBlock Text="% Active time over 60s" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <TextBlock x:Name="StDiskValue" Grid.Column="1" Text="0%" FontSize="34" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </Grid>
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="4">
+                        <Grid x:Name="DiskGraphHost" Height="120" SizeChanged="DiskGraphHost_SizeChanged">
+                            <Polygon x:Name="DiskFill" />
+                            <Polyline x:Name="DiskLine" />
+                        </Grid>
+                    </Border>
+                    <Grid ColumnSpacing="26">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0"><TextBlock Text="ACTIVE TIME" Style="{StaticResource StatKey}" /><TextBlock x:Name="StDiskActive" Text="0%" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock Text="READ" Style="{StaticResource StatKey}" /><TextBlock x:Name="StDiskRead" Text="0 MB/s" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock Text="WRITE" Style="{StaticResource StatKey}" /><TextBlock x:Name="StDiskWrite" Text="0 MB/s" Style="{StaticResource StatVal}" /></StackPanel>
+                    </Grid>
+
+                    <!-- Network -->
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Network" FontSize="22" FontWeight="SemiBold" />
+                            <TextBlock Text="Throughput over 60s" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <TextBlock x:Name="StNetValue" Grid.Column="1" Text="0 Mbps" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </Grid>
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="4">
+                        <Grid x:Name="NetGraphHost" Height="120" SizeChanged="NetGraphHost_SizeChanged">
+                            <Polygon x:Name="NetFill" />
+                            <Polyline x:Name="NetLine" />
+                        </Grid>
+                    </Border>
+                    <Grid ColumnSpacing="26" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0"><TextBlock Text="SEND" Style="{StaticResource StatKey}" /><TextBlock x:Name="StNetSend" Text="0 Mbps" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock Text="RECEIVE" Style="{StaticResource StatKey}" /><TextBlock x:Name="StNetRecv" Text="0 Mbps" Style="{StaticResource StatVal}" /></StackPanel>
+                    </Grid>
                 </StackPanel>
             </ScrollViewer>
 

@@ -34,6 +34,11 @@ public sealed partial class MainWindow : Window
 
     private readonly List<double> _cpuHist = new();
     private readonly List<double> _memHist = new();
+    private readonly List<double> _gpuHist = new();
+    private readonly List<double> _diskHist = new();
+    private readonly List<double> _netHist = new();
+    private string _cpuName = "CPU";
+    private string _osName = "Windows";
 
     private sealed class CoreTile
     {
@@ -46,6 +51,9 @@ public sealed partial class MainWindow : Window
 
     private SolidColorBrush _cpuLineBrush = null!, _cpuFillBrush = null!;
     private SolidColorBrush _memLineBrush = null!, _memFillBrush = null!;
+    private SolidColorBrush _gpuLineBrush = null!, _gpuFillBrush = null!;
+    private SolidColorBrush _diskLineBrush = null!, _diskFillBrush = null!;
+    private SolidColorBrush _netLineBrush = null!, _netFillBrush = null!;
 
     public MainWindow()
     {
@@ -55,13 +63,18 @@ public sealed partial class MainWindow : Window
         try { this.AppWindow?.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "pulse.ico")); } catch { }
 
         ProcList.ItemsSource = _processes;
-        for (int i = 0; i < HistN; i++) { _cpuHist.Add(0); _memHist.Add(0); }
+        for (int i = 0; i < HistN; i++) { _cpuHist.Add(0); _memHist.Add(0); _gpuHist.Add(0); _diskHist.Add(0); _netHist.Add(0); }
 
         BuildBrushes();
         StyleGraph(CpuLine, CpuFill, _cpuLineBrush, _cpuFillBrush);
         StyleGraph(MemLine, MemFill, _memLineBrush, _memFillBrush);
+        StyleGraph(GpuLine, GpuFill, _gpuLineBrush, _gpuFillBrush);
+        StyleGraph(DiskLine, DiskFill, _diskLineBrush, _diskFillBrush);
+        StyleGraph(NetLine, NetFill, _netLineBrush, _netFillBrush);
         BuildCoreTiles();
         StCores.Text = _mon.Cores.ToString();
+        _cpuName = ReadCpuName();
+        _osName = ReadOsName();
 
         _timer = this.DispatcherQueue.CreateTimer();
         _timer.Interval = TimeSpan.FromSeconds(1);
@@ -94,6 +107,9 @@ public sealed partial class MainWindow : Window
 
             Push(_cpuHist, snap.TotalCpu);
             Push(_memHist, memPct);
+            Push(_gpuHist, snap.Hw.GpuAvailable ? snap.Hw.GpuUtil : 0);
+            Push(_diskHist, snap.Hw.DiskActivePct);
+            Push(_netHist, snap.Hw.NetSendMbps + snap.Hw.NetRecvMbps);
             for (int i = 0; i < _coreTiles.Count && i < snap.PerCore.Length; i++)
                 Push(_coreTiles[i].Data, snap.PerCore[i]);
 
@@ -176,11 +192,20 @@ public sealed partial class MainWindow : Window
         try { accent = new UISettings().GetColorValue(UIColorType.Accent); }
         catch { accent = Color.FromArgb(255, 0x4C, 0xC2, 0xFF); }
         Color mem = Color.FromArgb(255, 0xB1, 0x8C, 0xFF);
+        Color gpu = Color.FromArgb(255, 0xE0, 0x6C, 0xB0);
+        Color disk = Color.FromArgb(255, 0x3A, 0xC0, 0x7A);
+        Color net = Color.FromArgb(255, 0xE0, 0x9B, 0x2E);
 
         _cpuLineBrush = new SolidColorBrush(accent);
         _cpuFillBrush = new SolidColorBrush(accent) { Opacity = 0.22 };
         _memLineBrush = new SolidColorBrush(mem);
         _memFillBrush = new SolidColorBrush(mem) { Opacity = 0.20 };
+        _gpuLineBrush = new SolidColorBrush(gpu);
+        _gpuFillBrush = new SolidColorBrush(gpu) { Opacity = 0.20 };
+        _diskLineBrush = new SolidColorBrush(disk);
+        _diskFillBrush = new SolidColorBrush(disk) { Opacity = 0.20 };
+        _netLineBrush = new SolidColorBrush(net);
+        _netFillBrush = new SolidColorBrush(net) { Opacity = 0.20 };
     }
 
     private static void StyleGraph(Polyline line, Polygon fill, Brush stroke, Brush fillBrush)
@@ -250,12 +275,93 @@ public sealed partial class MainWindow : Window
         StUtil.Text = snap.TotalCpu.ToString("0") + "%";
         StProcs.Text = snap.Count.ToString();
         StThreads.Text = snap.Procs.Sum(p => p.Threads).ToString();
+
+        DrawGraph(GpuLine, GpuFill, _gpuHist, GpuGraphHost.ActualWidth, GpuGraphHost.ActualHeight, 100);
+        DrawGraph(DiskLine, DiskFill, _diskHist, DiskGraphHost.ActualWidth, DiskGraphHost.ActualHeight, 100);
+        DrawGraph(NetLine, NetFill, _netHist, NetGraphHost.ActualWidth, NetGraphHost.ActualHeight, NetMax());
+        UpdateHwStats(snap);
+        UpdateSysInfo(snap);
+    }
+
+    private double NetMax() => Math.Max(10, _netHist.Count > 0 ? _netHist.Max() * 1.25 : 10);
+
+    private void UpdateHwStats(Snapshot snap)
+    {
+        var hw = snap.Hw;
+        GpuTitle.Text = hw.GpuAvailable ? "GPU · " + hw.GpuName : "GPU";
+        if (hw.GpuAvailable)
+        {
+            GpuSub.Text = "% Utilization over 60s";
+            StGpuValue.Text = hw.GpuUtil.ToString("0") + "%";
+            StGpuUtil.Text = hw.GpuUtil.ToString("0") + "%";
+            StGpuMem.Text = hw.GpuMemTotalMb > 0
+                ? (hw.GpuMemUsedMb / 1024).ToString("0.0") + " / " + (hw.GpuMemTotalMb / 1024).ToString("0") + " GB" : "—";
+            StGpuTemp.Text = hw.GpuHasSensors ? hw.GpuTempC.ToString("0") + " °C" : "—";
+            StGpuPower.Text = hw.GpuHasSensors && hw.GpuPowerW > 0
+                ? hw.GpuPowerW.ToString("0") + " W" + (hw.GpuPowerLimitW > 0 ? " / " + hw.GpuPowerLimitW.ToString("0") : "") : "—";
+            StGpuClock.Text = hw.GpuHasSensors && hw.GpuCoreClockMhz > 0 ? hw.GpuCoreClockMhz.ToString("0") + " MHz" : "—";
+            StGpuFan.Text = hw.GpuHasSensors ? hw.GpuFanPct.ToString("0") + "%" : "—";
+        }
+        else
+        {
+            GpuSub.Text = "Not available on this system";
+            StGpuValue.Text = "—";
+            StGpuUtil.Text = StGpuMem.Text = StGpuTemp.Text = StGpuPower.Text = StGpuClock.Text = StGpuFan.Text = "—";
+        }
+
+        StDiskValue.Text = hw.DiskActivePct.ToString("0") + "%";
+        StDiskActive.Text = hw.DiskActivePct.ToString("0") + "%";
+        StDiskRead.Text = FmtRate(hw.DiskReadMBs);
+        StDiskWrite.Text = FmtRate(hw.DiskWriteMBs);
+
+        double tot = hw.NetSendMbps + hw.NetRecvMbps;
+        StNetValue.Text = FmtMbps(tot);
+        StNetSend.Text = FmtMbps(hw.NetSendMbps);
+        StNetRecv.Text = FmtMbps(hw.NetRecvMbps);
+    }
+
+    private void UpdateSysInfo(Snapshot snap)
+    {
+        long up = Environment.TickCount64 / 1000;
+        string uptime = $"{up / 3600}:{(up % 3600) / 60:00}:{up % 60:00}";
+        string gpu = snap.Hw.GpuAvailable ? snap.Hw.GpuName : "no GPU sensor";
+        SysInfoText.Text = $"{_cpuName}   ·   {_mon.Cores} logical cores   ·   {snap.TotalMemMb / 1024:0} GB RAM   ·   {gpu}   ·   {_osName}   ·   up {uptime}";
+    }
+
+    private static string FmtRate(double mbps) => mbps < 0.05 ? "0 MB/s" : mbps.ToString("0.0") + " MB/s";
+    private static string FmtMbps(double m) => m < 0.05 ? "0 Mbps" : (m < 10 ? m.ToString("0.0") : m.ToString("0")) + " Mbps";
+
+    private static string ReadCpuName()
+    {
+        try
+        {
+            using var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0");
+            return k?.GetValue("ProcessorNameString")?.ToString()?.Trim() ?? "CPU";
+        }
+        catch { return "CPU"; }
+    }
+
+    private static string ReadOsName()
+    {
+        try
+        {
+            using var k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
+            string? product = k?.GetValue("ProductName")?.ToString();
+            string? build = k?.GetValue("CurrentBuildNumber")?.ToString();
+            int b = int.TryParse(build, out var bb) ? bb : 0;
+            string name = b >= 22000 ? "Windows 11" : (product ?? "Windows");
+            return build is not null ? $"{name} (build {build})" : name;
+        }
+        catch { return "Windows"; }
     }
 
     private void RedrawAll()
     {
         DrawGraph(CpuLine, CpuFill, _cpuHist, CpuGraphHost.ActualWidth, CpuGraphHost.ActualHeight, 100);
         DrawGraph(MemLine, MemFill, _memHist, MemGraphHost.ActualWidth, MemGraphHost.ActualHeight, 100);
+        DrawGraph(GpuLine, GpuFill, _gpuHist, GpuGraphHost.ActualWidth, GpuGraphHost.ActualHeight, 100);
+        DrawGraph(DiskLine, DiskFill, _diskHist, DiskGraphHost.ActualWidth, DiskGraphHost.ActualHeight, 100);
+        DrawGraph(NetLine, NetFill, _netHist, NetGraphHost.ActualWidth, NetGraphHost.ActualHeight, NetMax());
         foreach (var t in _coreTiles)
             DrawGraph(t.Line, t.Fill, t.Data, CoreGraphW, CoreGraphH, 100);
     }
@@ -289,6 +395,15 @@ public sealed partial class MainWindow : Window
 
     private void MemGraphHost_SizeChanged(object sender, SizeChangedEventArgs e) =>
         DrawGraph(MemLine, MemFill, _memHist, MemGraphHost.ActualWidth, MemGraphHost.ActualHeight, 100);
+
+    private void GpuGraphHost_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        DrawGraph(GpuLine, GpuFill, _gpuHist, GpuGraphHost.ActualWidth, GpuGraphHost.ActualHeight, 100);
+
+    private void DiskGraphHost_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        DrawGraph(DiskLine, DiskFill, _diskHist, DiskGraphHost.ActualWidth, DiskGraphHost.ActualHeight, 100);
+
+    private void NetGraphHost_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        DrawGraph(NetLine, NetFill, _netHist, NetGraphHost.ActualWidth, NetGraphHost.ActualHeight, NetMax());
 
     // ---------- navigation ----------
 

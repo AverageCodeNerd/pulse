@@ -16,6 +16,7 @@ public sealed class SystemMonitor
     private readonly int _cores = Environment.ProcessorCount;
     private readonly Stopwatch _sw = Stopwatch.StartNew();
     private readonly CpuMeter _cpu = new();
+    private HardwareMeter? _hw; // lazily created on the sampling thread
 
     public int Cores => _cores;
 
@@ -67,6 +68,9 @@ public sealed class SystemMonitor
 
         Native.GetMemory(out double usedMb, out double totalMb);
 
+        var hw = new HwInfo();
+        try { (_hw ??= new HardwareMeter()).Fill(hw); } catch { }
+
         return new Snapshot
         {
             Procs = procs,
@@ -74,6 +78,7 @@ public sealed class SystemMonitor
             UsedMemMb = usedMb,
             TotalMemMb = totalMb,
             PerCore = (double[])_cpu.PerCore.Clone(),
+            Hw = hw,
         };
     }
 
