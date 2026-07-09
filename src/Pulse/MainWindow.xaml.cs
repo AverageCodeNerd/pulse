@@ -52,6 +52,7 @@ public sealed partial class MainWindow : Window
         this.InitializeComponent();
         this.Title = "Pulse";
         try { this.AppWindow?.Resize(new SizeInt32(1220, 800)); } catch { }
+        try { this.AppWindow?.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "pulse.ico")); } catch { }
 
         ProcList.ItemsSource = _processes;
         for (int i = 0; i < HistN; i++) { _cpuHist.Add(0); _memHist.Add(0); }
