@@ -18,6 +18,9 @@
             <NavigationViewItem Content="Performance" Tag="performance">
                 <NavigationViewItem.Icon><FontIcon Glyph="&#xE9D2;" /></NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Startup apps" Tag="startup">
+                <NavigationViewItem.Icon><FontIcon Glyph="&#xE7B5;" /></NavigationViewItem.Icon>
+            </NavigationViewItem>
         </NavigationView.MenuItems>
 
         <Grid Padding="20,12,20,16">
@@ -207,6 +210,36 @@
                     </Border>
                 </StackPanel>
             </ScrollViewer>
+
+            <!-- ===================== STARTUP APPS ===================== -->
+            <Grid x:Name="StartupPanel" Visibility="Collapsed" RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="Startup apps" FontSize="22" FontWeight="SemiBold" />
+                    <TextBlock Text="Apps that run when you sign in. Toggle user-scoped items to speed up boot; all-users items need admin."
+                               FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+                <Border Grid.Row="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1" Padding="12,0,12,6">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="90" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Name" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Grid.Column="1" Text="Source" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Grid.Column="2" Text="Enabled" FontWeight="SemiBold" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                </Border>
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="StartupList" Spacing="0" />
+                </ScrollViewer>
+            </Grid>
         </Grid>
     </NavigationView>
 </Window>

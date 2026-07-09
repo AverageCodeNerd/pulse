@@ -18,6 +18,7 @@ namespace Pulse;
 public sealed partial class MainWindow : Window
 {
     private readonly SystemMonitor _mon = new();
+    private readonly StartupService _startup = new();
     private readonly Dictionary<int, ProcessInfo> _map = new();
     private readonly ObservableCollection<ProcessInfo> _processes = new();
     private DispatcherQueueTimer? _timer;
@@ -295,10 +296,70 @@ public sealed partial class MainWindow : Window
         if (args.SelectedItem is NavigationViewItem item && item.Tag is string tag)
         {
             bool perf = tag == "performance";
+            bool startup = tag == "startup";
+            bool proc = !perf && !startup;
             _perfVisible = perf;
-            if (ProcessesPanel is not null) ProcessesPanel.Visibility = perf ? Visibility.Collapsed : Visibility.Visible;
+            if (ProcessesPanel is not null) ProcessesPanel.Visibility = proc ? Visibility.Visible : Visibility.Collapsed;
             if (PerformancePanel is not null) PerformancePanel.Visibility = perf ? Visibility.Visible : Visibility.Collapsed;
+            if (StartupPanel is not null) StartupPanel.Visibility = startup ? Visibility.Visible : Visibility.Collapsed;
             if (perf) DispatcherQueue.TryEnqueue(RedrawAll);
+            if (startup) BuildStartupList();
+        }
+    }
+
+    // ---------- startup apps ----------
+
+    private void BuildStartupList()
+    {
+        StartupList.Children.Clear();
+        var secondary = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+
+        foreach (var entry in _startup.List())
+        {
+            var row = new Grid { Padding = new Thickness(12, 9, 12, 9) };
+            row.BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"];
+            row.BorderThickness = new Thickness(0, 0, 0, 1);
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(220) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });
+
+            var name = new StackPanel { Spacing = 1 };
+            name.Children.Add(new TextBlock { Text = entry.DisplayName, FontSize = 13.5 });
+            var sub = string.IsNullOrWhiteSpace(entry.Publisher) ? entry.Command : entry.Publisher;
+            name.Children.Add(new TextBlock { Text = sub, FontSize = 11.5, Foreground = secondary, TextTrimming = TextTrimming.CharacterEllipsis });
+            Grid.SetColumn(name, 0);
+
+            var source = new TextBlock { Text = entry.SourceLabel, FontSize = 12, Foreground = secondary, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(source, 1);
+
+            var toggle = new ToggleSwitch
+            {
+                IsOn = entry.Enabled,
+                IsEnabled = entry.CanToggle,
+                OnContent = "",
+                OffContent = "",
+                MinWidth = 0,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            var captured = entry;
+            bool reverting = false;
+            toggle.Toggled += (_, _) =>
+            {
+                if (reverting) return;
+                if (!_startup.SetEnabled(captured, toggle.IsOn))
+                {
+                    reverting = true;
+                    toggle.IsOn = captured.Enabled;
+                    reverting = false;
+                }
+            };
+            Grid.SetColumn(toggle, 2);
+
+            row.Children.Add(name);
+            row.Children.Add(source);
+            row.Children.Add(toggle);
+            StartupList.Children.Add(row);
         }
     }
 
