@@ -9,6 +9,9 @@ public sealed class AppSettings
     public int UpdateMs { get; set; } = 1000;
     public string Theme { get; set; } = "System"; // System | Light | Dark
     public bool AlwaysOnTop { get; set; } = false;
+    public int WinW { get; set; } = 1220;
+    public int WinH { get; set; } = 800;
+    public string LastPage { get; set; } = "processes";
 
     private static string Dir =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pulse");

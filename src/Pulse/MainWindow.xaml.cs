@@ -72,8 +72,9 @@ public sealed partial class MainWindow : Window
     {
         this.InitializeComponent();
         this.Title = "Pulse";
-        try { this.AppWindow?.Resize(new SizeInt32(1220, 800)); } catch { }
+        try { this.AppWindow?.Resize(new SizeInt32(Math.Max(720, _settings.WinW), Math.Max(480, _settings.WinH))); } catch { }
         try { this.AppWindow?.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "pulse.ico")); } catch { }
+        this.Closed += (_, _) => SaveWindowState();
 
         ProcList.ItemsSource = _processes;
         SvcList.ItemsSource = _services;
@@ -106,6 +107,28 @@ public sealed partial class MainWindow : Window
         _timer.Tick += async (_, _) => await RefreshAsync();
         _ = RefreshAsync();
         _timer.Start();
+
+        if (_settings.LastPage != "processes") SelectNavByTag(_settings.LastPage);
+    }
+
+    private void SelectNavByTag(string tag)
+    {
+        foreach (var obj in Nav.MenuItems.Concat(Nav.FooterMenuItems))
+            if (obj is NavigationViewItem nvi && nvi.Tag as string == tag) { Nav.SelectedItem = nvi; return; }
+    }
+
+    private void SaveWindowState()
+    {
+        try
+        {
+            if (this.AppWindow is not null)
+            {
+                _settings.WinW = this.AppWindow.Size.Width;
+                _settings.WinH = this.AppWindow.Size.Height;
+                _settings.Save();
+            }
+        }
+        catch { }
     }
 
     private void ApplyTheme(string theme)
@@ -472,6 +495,8 @@ public sealed partial class MainWindow : Window
             if (startup) BuildStartupList();
             if (services) _ = LoadServices();
             if (settings) RefreshSettings();
+
+            if (tag != _settings.LastPage) { _settings.LastPage = tag; _settings.Save(); }
         }
     }
 
