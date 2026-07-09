@@ -1,62 +1,135 @@
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Shapes;
 using Pulse.Models;
 using Pulse.Services;
+using Windows.Foundation;
 using Windows.Graphics;
+using Windows.UI;
+using Windows.UI.ViewManagement;
 
 namespace Pulse;
 
 public sealed partial class MainWindow : Window
 {
     private readonly SystemMonitor _mon = new();
+    private readonly Dictionary<int, ProcessInfo> _map = new();
     private readonly ObservableCollection<ProcessInfo> _processes = new();
     private DispatcherQueueTimer? _timer;
+    private bool _busy;
 
     private string _sortKey = "cpu";
     private bool _sortDesc = true;
+    private bool _perfVisible;
+
+    private const int HistN = 60;   // seconds of history for the big graphs
+    private const int CoreN = 40;   // samples per core tile
+    private const double CoreGraphW = 152, CoreGraphH = 44;
+
+    private readonly List<double> _cpuHist = new();
+    private readonly List<double> _memHist = new();
+
+    private sealed class CoreTile
+    {
+        public Polyline Line = null!;
+        public Polygon Fill = null!;
+        public TextBlock Pct = null!;
+        public readonly List<double> Data = new();
+    }
+    private readonly List<CoreTile> _coreTiles = new();
+
+    private SolidColorBrush _cpuLineBrush = null!, _cpuFillBrush = null!;
+    private SolidColorBrush _memLineBrush = null!, _memFillBrush = null!;
 
     public MainWindow()
     {
         this.InitializeComponent();
         this.Title = "Pulse";
-        try { this.AppWindow?.Resize(new SizeInt32(1160, 760)); } catch { }
+        try { this.AppWindow?.Resize(new SizeInt32(1220, 800)); } catch { }
 
         ProcList.ItemsSource = _processes;
+        for (int i = 0; i < HistN; i++) { _cpuHist.Add(0); _memHist.Add(0); }
+
+        BuildBrushes();
+        StyleGraph(CpuLine, CpuFill, _cpuLineBrush, _cpuFillBrush);
+        StyleGraph(MemLine, MemFill, _memLineBrush, _memFillBrush);
+        BuildCoreTiles();
+        StCores.Text = _mon.Cores.ToString();
 
         _timer = this.DispatcherQueue.CreateTimer();
         _timer.Interval = TimeSpan.FromSeconds(1);
-        _timer.Tick += (_, _) => Refresh();
+        _timer.Tick += async (_, _) => await RefreshAsync();
+        _ = RefreshAsync();
         _timer.Start();
-
-        Refresh(); // first paint (CPU shows on the second tick once deltas exist)
     }
 
-    private void Refresh()
+    // ---------- sampling / refresh ----------
+
+    private async Task RefreshAsync()
     {
-        var sorted = Sort(_mon.Sample());
-        Sync(sorted);
+        if (_busy) return;
+        _busy = true;
+        try
+        {
+            var snap = await Task.Run(_mon.SampleRaw); // heavy enumeration off the UI thread
 
-        CpuValue.Text = _mon.TotalCpu.ToString("0") + "%";
-        CpuBar.Value = _mon.TotalCpu;
+            ApplyProcesses(snap);
 
-        double usedGb = _mon.UsedMemMb / 1024.0;
-        double totalGb = _mon.TotalMemMb / 1024.0;
-        MemValue.Text = usedGb.ToString("0.0") + " / " + totalGb.ToString("0") + " GB";
-        MemBar.Value = _mon.TotalMemMb > 0 ? _mon.UsedMemMb / _mon.TotalMemMb * 100.0 : 0;
+            CpuValue.Text = snap.TotalCpu.ToString("0") + "%";
+            CpuBar.Value = snap.TotalCpu;
+            double usedGb = snap.UsedMemMb / 1024.0, totalGb = snap.TotalMemMb / 1024.0;
+            string memText = usedGb.ToString("0.0") + " / " + totalGb.ToString("0") + " GB";
+            MemValue.Text = memText;
+            PerfMemValue.Text = memText;
+            double memPct = snap.TotalMemMb > 0 ? snap.UsedMemMb / snap.TotalMemMb * 100.0 : 0;
+            MemBar.Value = memPct;
+            CountText.Text = snap.Count + " processes";
 
-        CountText.Text = _mon.ProcessCount + " processes";
+            Push(_cpuHist, snap.TotalCpu);
+            Push(_memHist, memPct);
+            for (int i = 0; i < _coreTiles.Count && i < snap.PerCore.Length; i++)
+                Push(_coreTiles[i].Data, snap.PerCore[i]);
+
+            if (_perfVisible) DrawPerf(snap);
+        }
+        finally { _busy = false; }
     }
 
-    private List<ProcessInfo> Sort(List<ProcessInfo> list)
+    private void ApplyProcesses(Snapshot snap)
+    {
+        var seen = new HashSet<int>(snap.Procs.Count);
+        var list = new List<ProcessInfo>(snap.Procs.Count);
+        foreach (var s in snap.Procs)
+        {
+            seen.Add(s.Pid);
+            if (!_map.TryGetValue(s.Pid, out var pi))
+            {
+                pi = new ProcessInfo { Pid = s.Pid, Name = s.Name };
+                _map[s.Pid] = pi;
+            }
+            pi.Cpu = s.Cpu;
+            pi.MemMb = s.MemMb;
+            pi.Threads = s.Threads;
+            pi.Status = s.Status;
+            list.Add(pi);
+        }
+        foreach (var pid in _map.Keys.Where(k => !seen.Contains(k)).ToList())
+            _map.Remove(pid);
+
+        Sync(SortList(list));
+    }
+
+    private List<ProcessInfo> SortList(List<ProcessInfo> list)
     {
         IOrderedEnumerable<ProcessInfo> o = _sortKey switch
         {
-            "name" => _sortDesc
-                ? list.OrderByDescending(p => p.Name, StringComparer.OrdinalIgnoreCase)
-                : list.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase),
+            "name" => _sortDesc ? list.OrderByDescending(p => p.Name, StringComparer.OrdinalIgnoreCase)
+                                : list.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase),
             "mem" => _sortDesc ? list.OrderByDescending(p => p.MemMb) : list.OrderBy(p => p.MemMb),
             "threads" => _sortDesc ? list.OrderByDescending(p => p.Threads) : list.OrderBy(p => p.Threads),
             "pid" => _sortDesc ? list.OrderByDescending(p => p.Pid) : list.OrderBy(p => p.Pid),
@@ -65,8 +138,8 @@ public sealed partial class MainWindow : Window
         return o.ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    /// <summary>Reconcile the ObservableCollection with the sorted snapshot, reusing
-    /// item instances so selection and scroll position survive each refresh.</summary>
+    /// <summary>Reconcile the collection with the sorted snapshot, reusing instances
+    /// so selection and scroll position survive each refresh.</summary>
     private void Sync(List<ProcessInfo> sorted)
     {
         var target = new HashSet<ProcessInfo>(sorted);
@@ -77,10 +150,7 @@ public sealed partial class MainWindow : Window
         for (int i = 0; i < sorted.Count; i++)
         {
             var item = sorted[i];
-            if (i >= _processes.Count)
-            {
-                _processes.Add(item);
-            }
+            if (i >= _processes.Count) { _processes.Add(item); }
             else if (!ReferenceEquals(_processes[i], item))
             {
                 int cur = _processes.IndexOf(item);
@@ -90,20 +160,162 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private static void Push(List<double> buf, double v)
+    {
+        buf.Add(v);
+        while (buf.Count > HistN) buf.RemoveAt(0);
+    }
+
+    // ---------- performance graphs ----------
+
+    private void BuildBrushes()
+    {
+        Color accent;
+        try { accent = new UISettings().GetColorValue(UIColorType.Accent); }
+        catch { accent = Color.FromArgb(255, 0x4C, 0xC2, 0xFF); }
+        Color mem = Color.FromArgb(255, 0xB1, 0x8C, 0xFF);
+
+        _cpuLineBrush = new SolidColorBrush(accent);
+        _cpuFillBrush = new SolidColorBrush(accent) { Opacity = 0.22 };
+        _memLineBrush = new SolidColorBrush(mem);
+        _memFillBrush = new SolidColorBrush(mem) { Opacity = 0.20 };
+    }
+
+    private static void StyleGraph(Polyline line, Polygon fill, Brush stroke, Brush fillBrush)
+    {
+        line.Stroke = stroke;
+        line.StrokeThickness = 1.6;
+        line.StrokeLineJoin = PenLineJoin.Round;
+        fill.Fill = fillBrush;
+    }
+
+    private void BuildCoreTiles()
+    {
+        var card = (Brush)Application.Current.Resources["CardBackgroundFillColorSecondaryBrush"];
+        var stroke = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"];
+        var secondary = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+
+        for (int i = 0; i < _mon.Cores; i++)
+        {
+            var tile = new CoreTile();
+            for (int k = 0; k < CoreN; k++) tile.Data.Add(0);
+
+            tile.Fill = new Polygon { Fill = _cpuFillBrush };
+            tile.Line = new Polyline { Stroke = _cpuLineBrush, StrokeThickness = 1.1, StrokeLineJoin = PenLineJoin.Round };
+            var graph = new Grid { Width = CoreGraphW, Height = CoreGraphH };
+            graph.Children.Add(tile.Fill);
+            graph.Children.Add(tile.Line);
+
+            var label = new TextBlock { Text = "CPU " + i, FontSize = 10, Foreground = secondary };
+            tile.Pct = new TextBlock { Text = "0%", FontSize = 11, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Right };
+            var top = new Grid();
+            top.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(tile.Pct, 1);
+            top.Children.Add(label);
+            top.Children.Add(tile.Pct);
+
+            var stack = new StackPanel { Spacing = 3 };
+            stack.Children.Add(top);
+            stack.Children.Add(graph);
+
+            var border = new Border
+            {
+                Background = card,
+                BorderBrush = stroke,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(8, 6, 8, 6),
+                Width = 156,
+                Height = 82,
+                Child = stack,
+            };
+            CoreGrid.Children.Add(border);
+            _coreTiles.Add(tile);
+        }
+    }
+
+    private void DrawPerf(Snapshot snap)
+    {
+        DrawGraph(CpuLine, CpuFill, _cpuHist, CpuGraphHost.ActualWidth, CpuGraphHost.ActualHeight, 100);
+        DrawGraph(MemLine, MemFill, _memHist, MemGraphHost.ActualWidth, MemGraphHost.ActualHeight, 100);
+        for (int i = 0; i < _coreTiles.Count && i < snap.PerCore.Length; i++)
+        {
+            DrawGraph(_coreTiles[i].Line, _coreTiles[i].Fill, _coreTiles[i].Data, CoreGraphW, CoreGraphH, 100);
+            _coreTiles[i].Pct.Text = snap.PerCore[i].ToString("0") + "%";
+        }
+        PerfCpuValue.Text = snap.TotalCpu.ToString("0") + "%";
+        StUtil.Text = snap.TotalCpu.ToString("0") + "%";
+        StProcs.Text = snap.Count.ToString();
+        StThreads.Text = snap.Procs.Sum(p => p.Threads).ToString();
+    }
+
+    private void RedrawAll()
+    {
+        DrawGraph(CpuLine, CpuFill, _cpuHist, CpuGraphHost.ActualWidth, CpuGraphHost.ActualHeight, 100);
+        DrawGraph(MemLine, MemFill, _memHist, MemGraphHost.ActualWidth, MemGraphHost.ActualHeight, 100);
+        foreach (var t in _coreTiles)
+            DrawGraph(t.Line, t.Fill, t.Data, CoreGraphW, CoreGraphH, 100);
+    }
+
+    private static void DrawGraph(Polyline line, Polygon fill, List<double> data, double w, double h, double max)
+    {
+        if (w <= 0 || h <= 0) return;
+        int n = data.Count;
+        if (n < 2) { line.Points = new PointCollection(); fill.Points = new PointCollection(); return; }
+
+        var lp = new PointCollection();
+        var fp = new PointCollection();
+        double step = w / (n - 1);
+        fp.Add(new Point(0, h));
+        for (int i = 0; i < n; i++)
+        {
+            double v = data[i];
+            if (v < 0) v = 0; else if (v > max) v = max;
+            double y = h - (v / max) * (h - 2) - 1;
+            var pt = new Point(i * step, y);
+            lp.Add(pt);
+            fp.Add(pt);
+        }
+        fp.Add(new Point(w, h));
+        line.Points = lp;
+        fill.Points = fp;
+    }
+
+    private void CpuGraphHost_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        DrawGraph(CpuLine, CpuFill, _cpuHist, CpuGraphHost.ActualWidth, CpuGraphHost.ActualHeight, 100);
+
+    private void MemGraphHost_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        DrawGraph(MemLine, MemFill, _memHist, MemGraphHost.ActualWidth, MemGraphHost.ActualHeight, 100);
+
+    // ---------- navigation ----------
+
+    private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        if (args.SelectedItem is NavigationViewItem item && item.Tag is string tag)
+        {
+            bool perf = tag == "performance";
+            _perfVisible = perf;
+            if (ProcessesPanel is not null) ProcessesPanel.Visibility = perf ? Visibility.Collapsed : Visibility.Visible;
+            if (PerformancePanel is not null) PerformancePanel.Visibility = perf ? Visibility.Visible : Visibility.Collapsed;
+            if (perf) DispatcherQueue.TryEnqueue(RedrawAll);
+        }
+    }
+
+    // ---------- process actions ----------
+
     private void Header_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement fe && fe.Tag is string key)
         {
             if (_sortKey == key) _sortDesc = !_sortDesc;
-            else { _sortKey = key; _sortDesc = key != "name"; } // text asc, numbers desc
-            Refresh();
+            else { _sortKey = key; _sortDesc = key != "name"; }
+            _ = RefreshAsync();
         }
     }
 
-    private void ProcList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
+    private void ProcList_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
         EndBtn.IsEnabled = ProcList.SelectedItem is ProcessInfo;
-    }
 
     private void ProcList_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => EndSelected();
 
@@ -114,7 +326,7 @@ public sealed partial class MainWindow : Window
         if (ProcList.SelectedItem is ProcessInfo pi)
         {
             _mon.EndTask(pi.Pid);
-            Refresh();
+            _ = RefreshAsync();
         }
     }
 }

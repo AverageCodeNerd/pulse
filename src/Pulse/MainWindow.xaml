@@ -8,105 +8,93 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Padding="16" RowSpacing="14">
-        <Grid.Resources>
-            <Style x:Key="HeaderButton" TargetType="Button">
-                <Setter Property="Background" Value="Transparent" />
-                <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="Padding" Value="4,2" />
-                <Setter Property="HorizontalAlignment" Value="Stretch" />
-                <Setter Property="HorizontalContentAlignment" Value="Right" />
-                <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
-            </Style>
-            <Style x:Key="StretchItem" TargetType="ListViewItem">
-                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                <Setter Property="Padding" Value="0" />
-                <Setter Property="MinHeight" Value="0" />
-            </Style>
-        </Grid.Resources>
+    <NavigationView x:Name="Nav" PaneDisplayMode="Left" OpenPaneLength="210"
+                    IsSettingsVisible="False" IsBackButtonVisible="Collapsed"
+                    SelectionChanged="Nav_SelectionChanged">
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Processes" Tag="processes" IsSelected="True">
+                <NavigationViewItem.Icon><FontIcon Glyph="&#xE8FD;" /></NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Performance" Tag="performance">
+                <NavigationViewItem.Icon><FontIcon Glyph="&#xE9D2;" /></NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        <Grid Padding="20,12,20,16">
+            <Grid.Resources>
+                <Style x:Key="HeaderButton" TargetType="Button">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Padding" Value="4,2" />
+                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                    <Setter Property="HorizontalContentAlignment" Value="Right" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Style>
+                <Style x:Key="StretchItem" TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="MinHeight" Value="0" />
+                </Style>
+                <Style x:Key="StatKey" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="11" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Style>
+                <Style x:Key="StatVal" TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="20" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </Style>
+            </Grid.Resources>
 
-        <!-- Stat cards -->
-        <Grid Grid.Row="0" ColumnSpacing="14">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            <!-- ===================== PROCESSES ===================== -->
+            <Grid x:Name="ProcessesPanel" RowSpacing="14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                    CornerRadius="8" Padding="18,14">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="CPU" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <TextBlock x:Name="CpuValue" Text="0%" FontSize="28" FontWeight="SemiBold" />
-                    <ProgressBar x:Name="CpuBar" Minimum="0" Maximum="100" Value="0" />
-                </StackPanel>
-            </Border>
+                <Grid Grid.Row="0" ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="CPU" Style="{StaticResource StatKey}" />
+                            <TextBlock x:Name="CpuValue" Text="0%" FontSize="28" FontWeight="SemiBold" />
+                            <ProgressBar x:Name="CpuBar" Minimum="0" Maximum="100" Value="0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="MEMORY" Style="{StaticResource StatKey}" />
+                            <TextBlock x:Name="MemValue" Text="0 / 0 GB" FontSize="28" FontWeight="SemiBold" />
+                            <ProgressBar x:Name="MemBar" Minimum="0" Maximum="100" Value="0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
 
-            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
-                    CornerRadius="8" Padding="18,14">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="MEMORY" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <TextBlock x:Name="MemValue" Text="0 / 0 GB" FontSize="28" FontWeight="SemiBold" />
-                    <ProgressBar x:Name="MemBar" Minimum="0" Maximum="100" Value="0" />
-                </StackPanel>
-            </Border>
-        </Grid>
+                <Grid Grid.Row="1" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="CountText" Grid.Column="0" VerticalAlignment="Center"
+                               Text="0 processes" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Button x:Name="EndBtn" Grid.Column="2" Content="End task" IsEnabled="False" Click="EndTask_Click" />
+                </Grid>
 
-        <!-- Toolbar -->
-        <Grid Grid.Row="1" ColumnSpacing="12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="CountText" Grid.Column="0" VerticalAlignment="Center"
-                       Text="0 processes" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            <Button x:Name="EndBtn" Grid.Column="2" Content="End task" IsEnabled="False"
-                    Click="EndTask_Click" />
-        </Grid>
-
-        <!-- Column headers -->
-        <Border Grid.Row="2" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="0,0,0,1" Padding="10,0,10,4">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="90" />
-                    <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="90" />
-                    <ColumnDefinition Width="120" />
-                </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Style="{StaticResource HeaderButton}" HorizontalContentAlignment="Left"
-                        Content="Name" Tag="name" Click="Header_Click" />
-                <Button Grid.Column="1" Style="{StaticResource HeaderButton}" Content="CPU" Tag="cpu" Click="Header_Click" />
-                <Button Grid.Column="2" Style="{StaticResource HeaderButton}" Content="Memory" Tag="mem" Click="Header_Click" />
-                <Button Grid.Column="3" Style="{StaticResource HeaderButton}" Content="Threads" Tag="threads" Click="Header_Click" />
-                <Button Grid.Column="4" Style="{StaticResource HeaderButton}" Content="PID" Tag="pid" Click="Header_Click" />
-                <TextBlock Grid.Column="5" Text="Status" HorizontalAlignment="Right" FontWeight="SemiBold"
-                           Padding="4,2" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            </Grid>
-        </Border>
-
-        <!-- Process list -->
-        <ListView x:Name="ProcList" Grid.Row="3" SelectionMode="Single"
-                  ItemContainerStyle="{StaticResource StretchItem}"
-                  SelectionChanged="ProcList_SelectionChanged"
-                  DoubleTapped="ProcList_DoubleTapped">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid Padding="10,7" ColumnSpacing="0">
+                <Border Grid.Row="2" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1" Padding="10,0,10,4">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="90" />
@@ -115,22 +103,110 @@
                             <ColumnDefinition Width="90" />
                             <ColumnDefinition Width="120" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                        <Button Grid.Column="0" Style="{StaticResource HeaderButton}" HorizontalContentAlignment="Left"
+                                Content="Name" Tag="name" Click="Header_Click" />
+                        <Button Grid.Column="1" Style="{StaticResource HeaderButton}" Content="CPU" Tag="cpu" Click="Header_Click" />
+                        <Button Grid.Column="2" Style="{StaticResource HeaderButton}" Content="Memory" Tag="mem" Click="Header_Click" />
+                        <Button Grid.Column="3" Style="{StaticResource HeaderButton}" Content="Threads" Tag="threads" Click="Header_Click" />
+                        <Button Grid.Column="4" Style="{StaticResource HeaderButton}" Content="PID" Tag="pid" Click="Header_Click" />
+                        <TextBlock Grid.Column="5" Text="Status" HorizontalAlignment="Right" FontWeight="SemiBold"
+                                   Padding="4,2" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                </Border>
+
+                <ListView x:Name="ProcList" Grid.Row="3" SelectionMode="Single"
+                          ItemContainerStyle="{StaticResource StretchItem}"
+                          SelectionChanged="ProcList_SelectionChanged"
+                          DoubleTapped="ProcList_DoubleTapped">
+                    <!-- No item transitions: rows update in place, no per-refresh animation/flicker. -->
+                    <ListView.ItemContainerTransitions>
+                        <TransitionCollection />
+                    </ListView.ItemContainerTransitions>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="10,7">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="120" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding CpuText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                                <TextBlock Grid.Column="2" Text="{Binding MemText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                                <TextBlock Grid.Column="3" Text="{Binding Threads}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                                <TextBlock Grid.Column="4" Text="{Binding Pid}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                                <TextBlock Grid.Column="5" Text="{Binding Status}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- ===================== PERFORMANCE ===================== -->
+            <ScrollViewer x:Name="PerformancePanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="CPU" FontSize="22" FontWeight="SemiBold" />
+                            <TextBlock x:Name="PerfCpuSub" Text="% Utilization over 60s" FontSize="12"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <TextBlock x:Name="PerfCpuValue" Grid.Column="1" Text="0%" FontSize="34" FontWeight="SemiBold"
                                    VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1" Text="{Binding CpuText}" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center" FontFamily="Consolas" />
-                        <TextBlock Grid.Column="2" Text="{Binding MemText}" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center" FontFamily="Consolas" />
-                        <TextBlock Grid.Column="3" Text="{Binding Threads}" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center" FontFamily="Consolas" />
-                        <TextBlock Grid.Column="4" Text="{Binding Pid}" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center" FontFamily="Consolas" />
-                        <TextBlock Grid.Column="5" Text="{Binding Status}" HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
+                    </Grid>
+
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="4">
+                        <Grid x:Name="CpuGraphHost" Height="230" SizeChanged="CpuGraphHost_SizeChanged">
+                            <Polygon x:Name="CpuFill" />
+                            <Polyline x:Name="CpuLine" />
+                        </Grid>
+                    </Border>
+
+                    <Grid ColumnSpacing="26">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0"><TextBlock Text="UTILIZATION" Style="{StaticResource StatKey}" /><TextBlock x:Name="StUtil" Text="0%" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock Text="PROCESSES" Style="{StaticResource StatKey}" /><TextBlock x:Name="StProcs" Text="0" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock Text="THREADS" Style="{StaticResource StatKey}" /><TextBlock x:Name="StThreads" Text="0" Style="{StaticResource StatVal}" /></StackPanel>
+                        <StackPanel Grid.Column="3"><TextBlock Text="LOGICAL CORES" Style="{StaticResource StatKey}" /><TextBlock x:Name="StCores" Text="0" Style="{StaticResource StatVal}" /></StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Logical processors" FontWeight="SemiBold" Margin="0,4,0,0" />
+                    <VariableSizedWrapGrid x:Name="CoreGrid" Orientation="Horizontal" ItemWidth="172" ItemHeight="98" MaximumRowsOrColumns="6" />
+
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Memory" FontWeight="SemiBold" />
+                        <TextBlock x:Name="PerfMemValue" Grid.Column="1" Text="0 / 0 GB"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-    </Grid>
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="4">
+                        <Grid x:Name="MemGraphHost" Height="120" SizeChanged="MemGraphHost_SizeChanged">
+                            <Polygon x:Name="MemFill" />
+                            <Polyline x:Name="MemLine" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </NavigationView>
 </Window>

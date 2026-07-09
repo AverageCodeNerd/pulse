@@ -4,32 +4,31 @@ using Pulse.Models;
 namespace Pulse.Services;
 
 /// <summary>
-/// Samples running processes and the machine's CPU/RAM. Per-process CPU% is
-/// derived from the change in total processor time between two samples,
-/// divided by wall-clock time and logical core count — the same method
-/// Task Manager uses.
+/// Samples all processes plus machine CPU/RAM. Per-process CPU% comes from the
+/// change in processor time between samples; total/per-core CPU comes from
+/// <see cref="CpuMeter"/>. Returns a plain <see cref="Snapshot"/> so the heavy
+/// enumeration can run on a background thread — the UI thread only applies the
+/// result, which keeps refreshes from hitching.
 /// </summary>
 public sealed class SystemMonitor
 {
-    private readonly Dictionary<int, ProcessInfo> _map = new();
     private readonly Dictionary<int, TimeSpan> _lastCpu = new();
     private readonly int _cores = Environment.ProcessorCount;
     private readonly Stopwatch _sw = Stopwatch.StartNew();
+    private readonly CpuMeter _cpu = new();
 
-    public double TotalCpu { get; private set; }
-    public double UsedMemMb { get; private set; }
-    public double TotalMemMb { get; private set; }
-    public int ProcessCount { get; private set; }
+    public int Cores => _cores;
 
-    /// <summary>Take one sample and return the live process list (instances are reused across calls).</summary>
-    public List<ProcessInfo> Sample()
+    public Snapshot SampleRaw()
     {
         double elapsedMs = _sw.Elapsed.TotalMilliseconds;
         _sw.Restart();
         if (elapsedMs <= 0) elapsedMs = 1;
 
+        _cpu.Sample();
+
+        var procs = new List<ProcSnap>(256);
         var seen = new HashSet<int>();
-        double totalCpuDeltaMs = 0;
 
         foreach (var p in Process.GetProcesses())
         {
@@ -49,45 +48,35 @@ public sealed class SystemMonitor
                     double dMs = (cpuNow - prev).TotalMilliseconds;
                     if (dMs < 0) dMs = 0;
                     cpuPct = dMs / (elapsedMs * _cores) * 100.0;
-                    totalCpuDeltaMs += dMs;
                 }
                 _lastCpu[pid] = cpuNow;
 
-                if (!_map.TryGetValue(pid, out var pi))
-                {
-                    string name;
-                    try { name = p.ProcessName; } catch { name = "(unknown)"; }
-                    pi = new ProcessInfo { Pid = pid, Name = name };
-                    _map[pid] = pi;
-                }
+                string name; try { name = p.ProcessName; } catch { name = "(unknown)"; }
+                double mem = 0; try { mem = p.WorkingSet64 / 1048576.0; } catch { }
+                int threads = 0; try { threads = p.Threads.Count; } catch { }
+                string status = "Running"; try { status = p.Responding ? "Running" : "Not responding"; } catch { }
 
-                pi.Cpu = cpuPct > 100 ? 100 : cpuPct;
-                try { pi.MemMb = p.WorkingSet64 / 1048576.0; } catch { }
-                try { pi.Threads = p.Threads.Count; } catch { }
-                try { pi.Status = p.Responding ? "Running" : "Not responding"; } catch { }
+                procs.Add(new ProcSnap(pid, name, Math.Min(cpuPct, 100), mem, threads, status));
             }
-            catch { /* process exited mid-enumeration */ }
+            catch { /* exited mid-enumeration */ }
             finally { p.Dispose(); }
         }
 
-        // Drop processes that have exited.
-        foreach (var pid in _map.Keys.Where(k => !seen.Contains(k)).ToList())
-        {
-            _map.Remove(pid);
+        foreach (var pid in _lastCpu.Keys.Where(k => !seen.Contains(k)).ToList())
             _lastCpu.Remove(pid);
-        }
-
-        TotalCpu = Math.Min(100, totalCpuDeltaMs / (elapsedMs * _cores) * 100.0);
-        ProcessCount = _map.Count;
 
         Native.GetMemory(out double usedMb, out double totalMb);
-        UsedMemMb = usedMb;
-        TotalMemMb = totalMb;
 
-        return _map.Values.ToList();
+        return new Snapshot
+        {
+            Procs = procs,
+            TotalCpu = _cpu.Overall,
+            UsedMemMb = usedMb,
+            TotalMemMb = totalMb,
+            PerCore = (double[])_cpu.PerCore.Clone(),
+        };
     }
 
-    /// <summary>Terminate a process. Returns false if it can't be killed (e.g. protected/access denied).</summary>
     public bool EndTask(int pid)
     {
         try
