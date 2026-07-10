@@ -114,7 +114,7 @@
 
                 <Border Grid.Row="2" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1" Padding="10,0,10,4">
-                    <Grid>
+                    <Grid x:Name="ProcHeaderGrid">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="85" />
@@ -168,6 +168,9 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
+                <TextBlock x:Name="ProcEmpty" Grid.Row="3" Text="" Visibility="Collapsed"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </Grid>
 
             <!-- ===================== PERFORMANCE ===================== -->

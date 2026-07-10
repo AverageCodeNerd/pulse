@@ -95,6 +95,7 @@ public sealed partial class MainWindow : Window
         BuildProcMenu();
         BuildSvcMenu();
         StCores.Text = _mon.Cores.ToString();
+        UpdateSortIndicators();
         _cpuName = ReadCpuName();
         _osName = ReadOsName();
 
@@ -215,6 +216,25 @@ public sealed partial class MainWindow : Window
             list = list.Where(p => p.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase)).ToList();
 
         Sync(SortList(list));
+
+        bool empty = _processes.Count == 0 && _filter.Length > 0;
+        ProcEmpty.Text = empty ? $"No processes match “{_filter}”" : "";
+        ProcEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private readonly Dictionary<string, string> _hdrLabels = new();
+
+    private void UpdateSortIndicators()
+    {
+        foreach (var child in ProcHeaderGrid.Children)
+        {
+            if (child is Button b && b.Tag is string tag)
+            {
+                if (!_hdrLabels.ContainsKey(tag)) _hdrLabels[tag] = b.Content as string ?? tag;
+                string arrow = tag == _sortKey ? (_sortDesc ? "  ▾" : "  ▴") : "";
+                b.Content = _hdrLabels[tag] + arrow;
+            }
+        }
     }
 
     private List<ProcessInfo> SortList(List<ProcessInfo> list)
@@ -821,6 +841,7 @@ public sealed partial class MainWindow : Window
         {
             if (_sortKey == key) _sortDesc = !_sortDesc;
             else { _sortKey = key; _sortDesc = key != "name"; }
+            UpdateSortIndicators();
             _ = RefreshAsync();
         }
     }
