@@ -13,6 +13,10 @@ public sealed class AppSettings
     public int WinH { get; set; } = 800;
     public string LastPage { get; set; } = "processes";
     public bool Compact { get; set; } = false;
+    public bool MinimizeToTray { get; set; } = false;
+
+    // Process-list columns hidden by the user ("cpu","mem","disk","threads","pid","status").
+    public List<string> HiddenColumns { get; set; } = new();
 
     // Per-resource graph colors (hex "#RRGGBB"). CpuColor "" means follow the system accent.
     public string CpuColor { get; set; } = "";

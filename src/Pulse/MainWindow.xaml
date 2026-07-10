@@ -146,7 +146,7 @@
                     </ListView.ItemContainerTransitions>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Padding="0" Background="Transparent" RightTapped="ProcRow_RightTapped">
+                            <Grid Padding="0" Background="Transparent" RightTapped="ProcRow_RightTapped" Loaded="ProcRow_Loaded">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="85" />
@@ -519,6 +519,20 @@
                                 <ComboBoxItem Content="Dark" Tag="Dark" />
                             </ComboBox>
                         </Grid>
+                    </Border>
+
+                    <!-- Columns -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <StackPanel Spacing="8">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Process columns" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Text="Choose which columns the process list shows. Name is always visible." FontSize="12.5"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <StackPanel x:Name="ColumnsList" Orientation="Horizontal" Spacing="18" />
+                        </StackPanel>
                     </Border>
 
                     <!-- Density -->

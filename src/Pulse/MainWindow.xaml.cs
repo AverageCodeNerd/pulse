@@ -96,6 +96,8 @@ public sealed partial class MainWindow : Window
         BuildSvcMenu();
         StCores.Text = _mon.Cores.ToString();
         UpdateSortIndicators();
+        BuildColumnChooser();
+        ApplyColumnVisibility();
         _cpuName = ReadCpuName();
         _osName = ReadOsName();
 
@@ -223,6 +225,79 @@ public sealed partial class MainWindow : Window
     }
 
     private readonly Dictionary<string, string> _hdrLabels = new();
+
+    // ---------- column chooser ----------
+
+    private static readonly (string Key, string Label, int Col, double Width)[] ColumnDefs =
+    {
+        ("cpu", "CPU", 1, 85),
+        ("mem", "Memory", 2, 105),
+        ("disk", "Disk", 3, 95),
+        ("threads", "Threads", 4, 75),
+        ("pid", "PID", 5, 75),
+        ("status", "Status", 6, 100),
+    };
+
+    private readonly List<WeakReference<Grid>> _rowGrids = new();
+
+    private void ProcRow_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is Grid g)
+        {
+            _rowGrids.Add(new WeakReference<Grid>(g));
+            ApplyColumnsTo(g);
+        }
+    }
+
+    private void ApplyColumnsTo(Grid g)
+    {
+        foreach (var (key, _, col, width) in ColumnDefs)
+        {
+            bool hidden = _settings.HiddenColumns.Contains(key);
+            if (col < g.ColumnDefinitions.Count)
+                g.ColumnDefinitions[col].Width = new GridLength(hidden ? 0 : width);
+            foreach (var child in g.Children)
+                if (child is FrameworkElement fe && Grid.GetColumn(fe) == col)
+                    fe.Visibility = hidden ? Visibility.Collapsed : Visibility.Visible;
+        }
+    }
+
+    private void ApplyColumnVisibility()
+    {
+        ApplyColumnsTo(ProcHeaderGrid);
+        for (int i = _rowGrids.Count - 1; i >= 0; i--)
+        {
+            if (_rowGrids[i].TryGetTarget(out var g)) ApplyColumnsTo(g);
+            else _rowGrids.RemoveAt(i);
+        }
+    }
+
+    private void BuildColumnChooser()
+    {
+        ColumnsList.Children.Clear();
+        foreach (var (key, label, _, _) in ColumnDefs)
+        {
+            var cb = new CheckBox
+            {
+                Content = label,
+                IsChecked = !_settings.HiddenColumns.Contains(key),
+                MinWidth = 0,
+            };
+            string k = key;
+            cb.Checked += (_, _) => SetColumnHidden(k, false);
+            cb.Unchecked += (_, _) => SetColumnHidden(k, true);
+            ColumnsList.Children.Add(cb);
+        }
+    }
+
+    private void SetColumnHidden(string key, bool hidden)
+    {
+        if (_loadingSettings) return;
+        if (hidden && !_settings.HiddenColumns.Contains(key)) _settings.HiddenColumns.Add(key);
+        if (!hidden) _settings.HiddenColumns.Remove(key);
+        _settings.Save();
+        ApplyColumnVisibility();
+    }
 
     private void UpdateSortIndicators()
     {
