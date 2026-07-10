@@ -2,7 +2,7 @@
 
 A fast, native **Windows 11 replacement for Task Manager**, built with C# / .NET WinUI 3.
 
-> Status: **v0.4.0.** A real WinUI 3 app (`src/Pulse/`) with five pages — Processes (filter, right-click actions, details), Performance (CPU, per-core, GPU/power/temps, disk, network), Startup apps, Services (start/stop/restart), and Settings (appearance, always-on-top, update speed, "make Pulse the default Task Manager") — is [downloadable from Releases](https://github.com/AverageCodeNerd/pulse/releases/latest). The HTML in `mockups/` remains the visual target for the fuller design.
+> Status: **v0.5.0.** A real WinUI 3 app (`src/Pulse/`) with five pages — Processes (filter, per-process disk I/O, right-click End/Restart/Suspend/Resume/priority/end-tree, details), Performance (CPU, per-core, GPU/power/temps, disk, network), Startup apps, Services (start/stop/restart), and Settings (run-as-admin, appearance, always-on-top, update speed, "make Pulse the default Task Manager") — is [downloadable from Releases](https://github.com/AverageCodeNerd/pulse/releases/latest). The HTML in `mockups/` remains the visual target for the fuller design.
 
 ## Repository layout
 
@@ -84,7 +84,7 @@ dotnet publish Pulse.csproj -c Release -p:Platform=x64 -r win-x64 --self-contain
 & "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer/Pulse.iss
 
 # 3. Publish the GitHub release
-gh release create v0.4.0 dist/Pulse-Setup.exe dist/Pulse-portable-x64.zip --title "Pulse v0.4.0" --notes-file notes.md
+gh release create v0.5.0 dist/Pulse-Setup.exe dist/Pulse-portable-x64.zip --title "Pulse v0.5.0" --notes-file notes.md
 ```
 
 The download buttons point at `.../releases/latest/download/Pulse-Setup.exe`, so they always resolve to the newest release — no page edits per version.
@@ -99,7 +99,11 @@ The download buttons point at `.../releases/latest/download/Pulse-Setup.exe`, so
 - [x] Process filter, Run new task, right-click actions (Restart / Open location / Copy), details dialog, Delete shortcut.
 - [x] Persisted settings + light/dark/system appearance + always on top.
 - [x] **Services** page (list + start/stop/restart via elevated relaunch).
-- [ ] Per-process disk/network/GPU columns (needs ETW / PDH counters).
+- [x] Run as administrator; per-process **Disk I/O** column.
+- [x] Power actions: Suspend/Resume, End process tree, Set priority.
+- [ ] Per-process **network / GPU** columns (needs ETW / PDH counters).
+- [ ] System tray (minimize to tray).
+- [ ] Visual polish + customization (accent colors, column chooser, layout).
 - [ ] CPU package power/temperature (needs a signed kernel driver, e.g. LibreHardwareMonitor).
 - [ ] Code-sign the installer (removes the SmartScreen warning).
 - [ ] winget / Scoop manifests; GitHub Actions workflow to automate releases.
