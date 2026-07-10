@@ -596,6 +596,19 @@ public sealed partial class MainWindow : Window
         var v = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
         string ver = v is null ? "" : $"v{v.Major}.{v.Minor}.{v.Build}";
         AboutText.Text = $"Pulse {ver} — a fast, native Windows Task Manager replacement.";
+
+        bool admin = Elevation.IsAdmin;
+        AdminBtn.IsEnabled = !admin;
+        AdminBtn.Content = admin ? "Running as administrator" : "Restart as administrator";
+        AdminStatus.Text = admin
+            ? "Pulse is running as administrator — it can end protected processes and manage services without extra prompts."
+            : "Run Pulse as administrator to manage protected processes and services without a prompt each time.";
+    }
+
+    private void AdminBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (Elevation.RelaunchAsAdmin())
+            this.Close(); // let the elevated instance take over
     }
 
     private void DefaultTmToggle_Toggled(object sender, RoutedEventArgs e)

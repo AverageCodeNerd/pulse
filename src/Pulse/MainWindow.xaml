@@ -451,6 +451,26 @@
                 <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Left">
                     <TextBlock Text="Settings" FontSize="22" FontWeight="SemiBold" />
 
+                    <!-- Administrator -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="3">
+                                <TextBlock Text="Administrator" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock x:Name="AdminStatus" TextWrapping="Wrap" FontSize="12.5"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Text="Run Pulse as administrator to manage protected processes and services without a prompt each time." />
+                            </StackPanel>
+                            <Button x:Name="AdminBtn" Grid.Column="1" Content="Restart as administrator"
+                                    VerticalAlignment="Center" Click="AdminBtn_Click" />
+                        </Grid>
+                    </Border>
+
                     <!-- Default Task Manager -->
                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"

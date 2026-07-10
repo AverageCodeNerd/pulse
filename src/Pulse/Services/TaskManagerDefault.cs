@@ -41,6 +41,10 @@ public static class TaskManagerDefault
     /// <summary>Relaunch elevated to set/clear the hook. Returns the resulting state's success.</summary>
     public static bool Apply(bool enable)
     {
+        if (Elevation.IsAdmin)
+        {
+            try { ApplyElevated(enable); return IsDefault() == enable; } catch { return false; }
+        }
         try
         {
             var psi = new ProcessStartInfo

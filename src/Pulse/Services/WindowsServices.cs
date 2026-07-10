@@ -49,6 +49,10 @@ public static class WindowsServices
     /// <summary>Relaunch elevated to perform the action. Returns false if UAC was declined.</summary>
     public static bool Apply(SvcAction action, string name)
     {
+        if (Elevation.IsAdmin)
+        {
+            try { ApplyElevated(action, name); return true; } catch { return false; }
+        }
         string flag = action switch { SvcAction.Start => StartFlag, SvcAction.Stop => StopFlag, _ => RestartFlag };
         try
         {
