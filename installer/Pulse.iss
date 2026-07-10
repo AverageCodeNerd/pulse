@@ -2,7 +2,7 @@
 ; Build: "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\Pulse.iss
 
 #define MyAppName "Pulse"
-#define MyAppVersion "0.6.0"
+#define MyAppVersion "0.7.0"
 #define MyAppPublisher "AverageCodeNerd"
 #define MyAppURL "https://github.com/AverageCodeNerd/pulse"
 #define MyAppExeName "Pulse.exe"
