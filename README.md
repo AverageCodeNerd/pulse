@@ -1,8 +1,14 @@
 # Pulse
 
-A fast, native **Windows 11 replacement for Task Manager**, built with C# / .NET WinUI 3.
+A fast, native **Windows replacement for Task Manager**, built with C# / .NET WinUI 3.
 
-> Status: **v0.7.0** (column chooser + close-to-system-tray, on top of custom graph colors and compact/comfortable density). A real WinUI 3 app (`src/Pulse/`) with five pages — Processes (filter, per-process disk I/O, right-click End/Restart/Suspend/Resume/priority/end-tree, details), Performance (CPU, per-core, GPU/power/temps, disk, network), Startup apps, Services (start/stop/restart), and Settings (run-as-admin, appearance, always-on-top, update speed, "make Pulse the default Task Manager") — is [downloadable from Releases](https://github.com/AverageCodeNerd/pulse/releases/latest). The HTML in `mockups/` remains the visual target for the fuller design.
+### 🧪 Now in Open Beta
+
+**[⬇ Download the Open Beta](https://averagecodenerd.github.io/pulse/)** · [Report a bug or request a feature](https://github.com/AverageCodeNerd/pulse/issues)
+
+Pulse **1.0.0 Open Beta** is feature-complete and stable in daily use — but it's a beta, so rough edges are possible and feedback is very welcome. It's not code-signed yet, so Windows SmartScreen may warn "unknown publisher" (**More info → Run anyway**).
+
+A real WinUI 3 app (`src/Pulse/`) with five pages — Processes (filter, per-process disk I/O, right-click End/Restart/Suspend/Resume/priority/end-tree, details), Performance (CPU, per-core, GPU/power/temps, disk, network), Startup apps, Services (start/stop/restart), and Settings (run-as-admin, appearance, tray, always-on-top, update speed, custom colors, density, column chooser, "make Pulse the default Task Manager"). The HTML in `mockups/` remains the visual target for the fuller design.
 
 ## Repository layout
 
