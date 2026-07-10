@@ -143,6 +143,27 @@ public sealed class SystemMonitor
         catch { return null; }
     }
 
+    /// <summary>Kill a process and all of its descendants (uses taskkill /T).</summary>
+    public bool EndTree(int pid)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("taskkill", $"/F /T /PID {pid}")
+            { UseShellExecute = false, CreateNoWindow = true });
+            return true;
+        }
+        catch { return false; }
+    }
+
+    public bool Suspend(int pid) => Native.SuspendProcess(pid, true);
+    public bool Resume(int pid) => Native.SuspendProcess(pid, false);
+
+    public bool SetPriority(int pid, ProcessPriorityClass priority)
+    {
+        try { using var p = Process.GetProcessById(pid); p.PriorityClass = priority; return true; }
+        catch { return false; }
+    }
+
     /// <summary>Kill a process and relaunch it from its executable path.</summary>
     public bool Restart(int pid)
     {

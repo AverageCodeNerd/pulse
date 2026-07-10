@@ -38,6 +38,27 @@ internal static class Native
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetProcessIoCounters(IntPtr hProcess, out IO_COUNTERS lpIoCounters);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, int pid);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(IntPtr h);
+
+    [DllImport("ntdll.dll")] private static extern int NtSuspendProcess(IntPtr h);
+    [DllImport("ntdll.dll")] private static extern int NtResumeProcess(IntPtr h);
+
+    private const uint PROCESS_SUSPEND_RESUME = 0x0800;
+
+    /// <summary>Suspend or resume every thread of a process.</summary>
+    public static bool SuspendProcess(int pid, bool suspend)
+    {
+        IntPtr h = OpenProcess(PROCESS_SUSPEND_RESUME, false, pid);
+        if (h == IntPtr.Zero) return false;
+        try { return (suspend ? NtSuspendProcess(h) : NtResumeProcess(h)) == 0; }
+        finally { CloseHandle(h); }
+    }
+
     /// <summary>Cumulative read+write bytes for a process handle, or false if inaccessible.</summary>
     public static bool TryGetIoBytes(IntPtr handle, out ulong bytes)
     {

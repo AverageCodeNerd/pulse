@@ -841,13 +841,38 @@ public sealed partial class MainWindow : Window
             mi.Click += (_, _) => act();
             _procMenu.Items.Add(mi);
         }
-        Add("Details", () => { if (ProcList.SelectedItem is ProcessInfo p) _ = ShowDetails(p); });
+        Add("Details", () => WithSelected(p => { _ = ShowDetails(p); }));
         Add("End task", EndSelected);
+        Add("End process tree", () => WithSelected(p => { _mon.EndTree(p.Pid); _ = RefreshAsync(); }));
         Add("Restart", RestartSelected);
-        Add("Open file location", OpenFileLocation);
         _procMenu.Items.Add(new MenuFlyoutSeparator());
-        Add("Copy PID", () => { if (ProcList.SelectedItem is ProcessInfo p) CopyText(p.Pid.ToString()); });
-        Add("Copy name", () => { if (ProcList.SelectedItem is ProcessInfo p) CopyText(p.Name); });
+        Add("Suspend", () => WithSelected(p => { if (!_mon.Suspend(p.Pid)) _ = ShowInfo("Couldn't suspend", "Access denied — try running Pulse as administrator."); }));
+        Add("Resume", () => WithSelected(p => _mon.Resume(p.Pid)));
+
+        var priority = new MenuFlyoutSubItem { Text = "Set priority" };
+        void AddPri(string text, ProcessPriorityClass pc)
+        {
+            var mi = new MenuFlyoutItem { Text = text };
+            mi.Click += (_, _) => WithSelected(p => { if (!_mon.SetPriority(p.Pid, pc)) _ = ShowInfo("Couldn't set priority", "Access denied — try running Pulse as administrator."); });
+            priority.Items.Add(mi);
+        }
+        AddPri("Realtime", ProcessPriorityClass.RealTime);
+        AddPri("High", ProcessPriorityClass.High);
+        AddPri("Above normal", ProcessPriorityClass.AboveNormal);
+        AddPri("Normal", ProcessPriorityClass.Normal);
+        AddPri("Below normal", ProcessPriorityClass.BelowNormal);
+        AddPri("Low", ProcessPriorityClass.Idle);
+        _procMenu.Items.Add(priority);
+
+        _procMenu.Items.Add(new MenuFlyoutSeparator());
+        Add("Open file location", OpenFileLocation);
+        Add("Copy PID", () => WithSelected(p => CopyText(p.Pid.ToString())));
+        Add("Copy name", () => WithSelected(p => CopyText(p.Name)));
+    }
+
+    private void WithSelected(Action<ProcessInfo> act)
+    {
+        if (ProcList.SelectedItem is ProcessInfo p) act(p);
     }
 
     private void ProcRow_RightTapped(object sender, RightTappedRoutedEventArgs e)
