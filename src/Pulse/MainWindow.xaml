@@ -575,6 +575,25 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Minimize to tray -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="3">
+                                <TextBlock Text="Close to tray" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Text="Closing the window keeps Pulse running in the notification area. Left-click the tray icon to reopen; right-click for Exit." FontSize="12.5"
+                                           TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ToggleSwitch x:Name="TrayToggle" Grid.Column="1" VerticalAlignment="Center"
+                                          OnContent="On" OffContent="Off" Toggled="TrayToggle_Toggled" />
+                        </Grid>
+                    </Border>
+
                     <!-- Always on top -->
                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"

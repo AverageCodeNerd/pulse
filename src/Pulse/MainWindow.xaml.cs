@@ -31,6 +31,8 @@ public sealed partial class MainWindow : Window
     private bool _busy;
     private MenuFlyout _procMenu = null!;
     private MenuFlyout _svcMenu = null!;
+    private H.NotifyIcon.TaskbarIcon? _tray;
+    private bool _reallyExit;
 
     private string _sortKey = "cpu";
     private bool _sortDesc = true;
@@ -75,6 +77,16 @@ public sealed partial class MainWindow : Window
         try { this.AppWindow?.Resize(new SizeInt32(Math.Max(720, _settings.WinW), Math.Max(480, _settings.WinH))); } catch { }
         try { this.AppWindow?.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "pulse.ico")); } catch { }
         this.Closed += (_, _) => SaveWindowState();
+        if (this.AppWindow is not null)
+            this.AppWindow.Closing += (_, e) =>
+            {
+                if (_settings.MinimizeToTray && !_reallyExit && _tray is not null)
+                {
+                    e.Cancel = true;
+                    SaveWindowState();
+                    this.AppWindow.Hide();
+                }
+            };
 
         ProcList.ItemsSource = _processes;
         SvcList.ItemsSource = _services;
@@ -108,6 +120,7 @@ public sealed partial class MainWindow : Window
         SelectComboByTag(ThemeCombo, _settings.Theme);
         SelectComboByTag(SpeedCombo, _settings.UpdateMs.ToString());
         AlwaysOnTopToggle.IsOn = _settings.AlwaysOnTop;
+        if (_settings.MinimizeToTray) { CreateTray(); TrayToggle.IsOn = _tray is not null; }
         _loadingSettings = false;
 
         _timer = this.DispatcherQueue.CreateTimer();
@@ -178,6 +191,9 @@ public sealed partial class MainWindow : Window
             double memPct = snap.TotalMemMb > 0 ? snap.UsedMemMb / snap.TotalMemMb * 100.0 : 0;
             MemBar.Value = memPct;
             CountText.Text = snap.Count + " processes";
+
+            if (_tray is not null)
+                _tray.ToolTipText = $"Pulse — CPU {snap.TotalCpu:0}%, RAM {usedGb:0.0} GB";
 
             Push(_cpuHist, snap.TotalCpu);
             Push(_memHist, memPct);
@@ -823,6 +839,86 @@ public sealed partial class MainWindow : Window
     {
         ApplyAlwaysOnTop(AlwaysOnTopToggle.IsOn);
         if (!_loadingSettings) { _settings.AlwaysOnTop = AlwaysOnTopToggle.IsOn; _settings.Save(); }
+    }
+
+    // ---------- system tray ----------
+
+    private sealed class Relay : System.Windows.Input.ICommand
+    {
+        private readonly Action _act;
+        public Relay(Action act) => _act = act;
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
+        public bool CanExecute(object? p) => true;
+        public void Execute(object? p) => _act();
+    }
+
+    private void CreateTray()
+    {
+        if (_tray is not null) return;
+        try
+        {
+            _tray = new H.NotifyIcon.TaskbarIcon
+            {
+                ToolTipText = "Pulse",
+                Icon = new System.Drawing.Icon(System.IO.Path.Combine(AppContext.BaseDirectory, "assets", "pulse.ico")),
+                LeftClickCommand = new Relay(ShowFromTray),
+                NoLeftClickDelay = true,
+                ContextMenuMode = H.NotifyIcon.ContextMenuMode.SecondWindow,
+            };
+            var menu = new MenuFlyout();
+            var open = new MenuFlyoutItem { Text = "Open Pulse" };
+            open.Click += (_, _) => ShowFromTray();
+            var exit = new MenuFlyoutItem { Text = "Exit" };
+            exit.Click += (_, _) => ExitFromTray();
+            menu.Items.Add(open);
+            menu.Items.Add(new MenuFlyoutSeparator());
+            menu.Items.Add(exit);
+            _tray.ContextFlyout = menu;
+            _tray.ForceCreate();
+        }
+        catch
+        {
+            _tray?.Dispose();
+            _tray = null;
+        }
+    }
+
+    private void DestroyTray()
+    {
+        _tray?.Dispose();
+        _tray = null;
+    }
+
+    private void ShowFromTray()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            this.AppWindow?.Show();
+            this.Activate();
+        });
+    }
+
+    private void ExitFromTray()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _reallyExit = true;
+            DestroyTray();
+            this.Close();
+        });
+    }
+
+    private void TrayToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        bool on = TrayToggle.IsOn;
+        if (on) CreateTray(); else DestroyTray();
+        if (_tray is null && on)
+        {
+            // creation failed — reflect reality
+            TrayToggle.IsOn = false;
+            return;
+        }
+        if (!_loadingSettings) { _settings.MinimizeToTray = on && _tray is not null; _settings.Save(); }
     }
 
     private void CompactToggle_Toggled(object sender, RoutedEventArgs e)
