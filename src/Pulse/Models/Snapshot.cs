@@ -1,7 +1,7 @@
 namespace Pulse.Models;
 
 /// <summary>Immutable per-process reading produced on the sampling thread.</summary>
-public readonly record struct ProcSnap(int Pid, string Name, double Cpu, double MemMb, int Threads, string Status);
+public readonly record struct ProcSnap(int Pid, string Name, double Cpu, double MemMb, double DiskMBs, int Threads, string Status);
 
 /// <summary>On-demand extra detail for a process (fetched when the user opens Details).</summary>
 public readonly record struct ProcessDetails(string? Path, System.DateTime? Started, string? Company, string? Description);

@@ -198,6 +198,7 @@ public sealed partial class MainWindow : Window
             }
             pi.Cpu = s.Cpu;
             pi.MemMb = s.MemMb;
+            pi.DiskMBs = s.DiskMBs;
             pi.Threads = s.Threads;
             pi.Status = s.Status;
             list.Add(pi);
@@ -218,6 +219,7 @@ public sealed partial class MainWindow : Window
             "name" => _sortDesc ? list.OrderByDescending(p => p.Name, StringComparer.OrdinalIgnoreCase)
                                 : list.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase),
             "mem" => _sortDesc ? list.OrderByDescending(p => p.MemMb) : list.OrderBy(p => p.MemMb),
+            "disk" => _sortDesc ? list.OrderByDescending(p => p.DiskMBs) : list.OrderBy(p => p.DiskMBs),
             "threads" => _sortDesc ? list.OrderByDescending(p => p.Threads) : list.OrderBy(p => p.Threads),
             "pid" => _sortDesc ? list.OrderByDescending(p => p.Pid) : list.OrderBy(p => p.Pid),
             _ => _sortDesc ? list.OrderByDescending(p => p.Cpu) : list.OrderBy(p => p.Cpu),

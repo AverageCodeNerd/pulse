@@ -23,6 +23,33 @@ internal static class Native
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct IO_COUNTERS
+    {
+        public ulong ReadOperationCount;
+        public ulong WriteOperationCount;
+        public ulong OtherOperationCount;
+        public ulong ReadTransferCount;
+        public ulong WriteTransferCount;
+        public ulong OtherTransferCount;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetProcessIoCounters(IntPtr hProcess, out IO_COUNTERS lpIoCounters);
+
+    /// <summary>Cumulative read+write bytes for a process handle, or false if inaccessible.</summary>
+    public static bool TryGetIoBytes(IntPtr handle, out ulong bytes)
+    {
+        bytes = 0;
+        if (GetProcessIoCounters(handle, out var c))
+        {
+            bytes = c.ReadTransferCount + c.WriteTransferCount;
+            return true;
+        }
+        return false;
+    }
+
     public static void GetMemory(out double usedMb, out double totalMb)
     {
         var m = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>() };

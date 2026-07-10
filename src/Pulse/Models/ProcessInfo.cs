@@ -26,6 +26,13 @@ public sealed class ProcessInfo : INotifyPropertyChanged
         set { if (Set(ref _memMb, value)) Raise(nameof(MemText)); }
     }
 
+    private double _diskMbs;
+    public double DiskMBs
+    {
+        get => _diskMbs;
+        set { if (Set(ref _diskMbs, value)) Raise(nameof(DiskText)); }
+    }
+
     private int _threads;
     public int Threads
     {
@@ -45,6 +52,8 @@ public sealed class ProcessInfo : INotifyPropertyChanged
     public string MemText => _memMb >= 1024
         ? (_memMb / 1024).ToString("0.0") + " GB"
         : _memMb.ToString("0") + " MB";
+
+    public string DiskText => _diskMbs < 0.05 ? "0 MB/s" : _diskMbs.ToString("0.0") + " MB/s";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

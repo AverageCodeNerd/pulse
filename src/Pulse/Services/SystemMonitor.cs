@@ -13,6 +13,7 @@ namespace Pulse.Services;
 public sealed class SystemMonitor
 {
     private readonly Dictionary<int, TimeSpan> _lastCpu = new();
+    private readonly Dictionary<int, ulong> _lastIo = new();
     private readonly int _cores = Environment.ProcessorCount;
     private readonly Stopwatch _sw = Stopwatch.StartNew();
     private readonly CpuMeter _cpu = new();
@@ -57,14 +58,29 @@ public sealed class SystemMonitor
                 int threads = 0; try { threads = p.Threads.Count; } catch { }
                 string status = "Running"; try { status = p.Responding ? "Running" : "Not responding"; } catch { }
 
-                procs.Add(new ProcSnap(pid, name, Math.Min(cpuPct, 100), mem, threads, status));
+                double diskMBs = 0;
+                try
+                {
+                    if (Native.TryGetIoBytes(p.Handle, out ulong io))
+                    {
+                        if (_lastIo.TryGetValue(pid, out var prevIo) && io >= prevIo)
+                            diskMBs = (io - prevIo) / 1048576.0 / (elapsedMs / 1000.0);
+                        _lastIo[pid] = io;
+                    }
+                }
+                catch { }
+
+                procs.Add(new ProcSnap(pid, name, Math.Min(cpuPct, 100), mem, diskMBs, threads, status));
             }
             catch { /* exited mid-enumeration */ }
             finally { p.Dispose(); }
         }
 
         foreach (var pid in _lastCpu.Keys.Where(k => !seen.Contains(k)).ToList())
+        {
             _lastCpu.Remove(pid);
+            _lastIo.Remove(pid);
+        }
 
         Native.GetMemory(out double usedMb, out double totalMb);
 
