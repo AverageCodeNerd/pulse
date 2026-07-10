@@ -520,6 +520,27 @@
                         </Grid>
                     </Border>
 
+                    <!-- Graph colors -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <StackPanel Spacing="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Spacing="3">
+                                    <TextBlock Text="Graph colors" FontSize="15" FontWeight="SemiBold" />
+                                    <TextBlock Text="Pick the color for each resource's graph and meter." FontSize="12.5"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Reset" VerticalAlignment="Center" Click="ResetColors_Click" />
+                            </Grid>
+                            <StackPanel x:Name="ColorsList" Spacing="0" />
+                        </StackPanel>
+                    </Border>
+
                     <!-- Always on top -->
                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"

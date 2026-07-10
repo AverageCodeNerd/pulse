@@ -86,6 +86,9 @@ public sealed partial class MainWindow : Window
         StyleGraph(GpuLine, GpuFill, _gpuLineBrush, _gpuFillBrush);
         StyleGraph(DiskLine, DiskFill, _diskLineBrush, _diskFillBrush);
         StyleGraph(NetLine, NetFill, _netLineBrush, _netFillBrush);
+        CpuBar.Foreground = _cpuLineBrush;
+        MemBar.Foreground = _memLineBrush;
+        BuildColorRows();
         BuildCoreTiles();
         BuildProcMenu();
         BuildSvcMenu();
@@ -257,26 +260,95 @@ public sealed partial class MainWindow : Window
 
     // ---------- performance graphs ----------
 
+    private static readonly Color DefMem = Color.FromArgb(255, 0xB1, 0x8C, 0xFF);
+    private static readonly Color DefGpu = Color.FromArgb(255, 0xE0, 0x6C, 0xB0);
+    private static readonly Color DefDisk = Color.FromArgb(255, 0x3A, 0xC0, 0x7A);
+    private static readonly Color DefNet = Color.FromArgb(255, 0xE0, 0x9B, 0x2E);
+
+    private Color SystemAccent()
+    {
+        try { return new UISettings().GetColorValue(UIColorType.Accent); }
+        catch { return Color.FromArgb(255, 0x4C, 0xC2, 0xFF); }
+    }
+
     private void BuildBrushes()
     {
-        Color accent;
-        try { accent = new UISettings().GetColorValue(UIColorType.Accent); }
-        catch { accent = Color.FromArgb(255, 0x4C, 0xC2, 0xFF); }
-        Color mem = Color.FromArgb(255, 0xB1, 0x8C, 0xFF);
-        Color gpu = Color.FromArgb(255, 0xE0, 0x6C, 0xB0);
-        Color disk = Color.FromArgb(255, 0x3A, 0xC0, 0x7A);
-        Color net = Color.FromArgb(255, 0xE0, 0x9B, 0x2E);
+        Color cpu = string.IsNullOrEmpty(_settings.CpuColor) ? SystemAccent() : ParseHex(_settings.CpuColor, SystemAccent());
+        _cpuLineBrush = new SolidColorBrush(cpu); _cpuFillBrush = new SolidColorBrush(cpu) { Opacity = 0.22 };
+        _memLineBrush = new SolidColorBrush(ParseHex(_settings.MemColor, DefMem)); _memFillBrush = new SolidColorBrush(_memLineBrush.Color) { Opacity = 0.20 };
+        _gpuLineBrush = new SolidColorBrush(ParseHex(_settings.GpuColor, DefGpu)); _gpuFillBrush = new SolidColorBrush(_gpuLineBrush.Color) { Opacity = 0.20 };
+        _diskLineBrush = new SolidColorBrush(ParseHex(_settings.DiskColor, DefDisk)); _diskFillBrush = new SolidColorBrush(_diskLineBrush.Color) { Opacity = 0.20 };
+        _netLineBrush = new SolidColorBrush(ParseHex(_settings.NetColor, DefNet)); _netFillBrush = new SolidColorBrush(_netLineBrush.Color) { Opacity = 0.20 };
+    }
 
-        _cpuLineBrush = new SolidColorBrush(accent);
-        _cpuFillBrush = new SolidColorBrush(accent) { Opacity = 0.22 };
-        _memLineBrush = new SolidColorBrush(mem);
-        _memFillBrush = new SolidColorBrush(mem) { Opacity = 0.20 };
-        _gpuLineBrush = new SolidColorBrush(gpu);
-        _gpuFillBrush = new SolidColorBrush(gpu) { Opacity = 0.20 };
-        _diskLineBrush = new SolidColorBrush(disk);
-        _diskFillBrush = new SolidColorBrush(disk) { Opacity = 0.20 };
-        _netLineBrush = new SolidColorBrush(net);
-        _netFillBrush = new SolidColorBrush(net) { Opacity = 0.20 };
+    private static Color ParseHex(string hex, Color fallback)
+    {
+        try
+        {
+            hex = hex.TrimStart('#');
+            if (hex.Length == 6)
+                return Color.FromArgb(255,
+                    System.Convert.ToByte(hex.Substring(0, 2), 16),
+                    System.Convert.ToByte(hex.Substring(2, 2), 16),
+                    System.Convert.ToByte(hex.Substring(4, 2), 16));
+        }
+        catch { }
+        return fallback;
+    }
+
+    private static string ToHex(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+
+    private void SetResourceColor(string res, Color c)
+    {
+        string hex = ToHex(c);
+        switch (res)
+        {
+            case "cpu": _settings.CpuColor = hex; _cpuLineBrush.Color = c; _cpuFillBrush.Color = c; break;
+            case "mem": _settings.MemColor = hex; _memLineBrush.Color = c; _memFillBrush.Color = c; break;
+            case "gpu": _settings.GpuColor = hex; _gpuLineBrush.Color = c; _gpuFillBrush.Color = c; break;
+            case "disk": _settings.DiskColor = hex; _diskLineBrush.Color = c; _diskFillBrush.Color = c; break;
+            case "net": _settings.NetColor = hex; _netLineBrush.Color = c; _netFillBrush.Color = c; break;
+        }
+        _settings.Save();
+    }
+
+    private void BuildColorRows()
+    {
+        ColorsList.Children.Clear();
+        AddColorRow("cpu", "CPU", _cpuLineBrush);
+        AddColorRow("mem", "Memory", _memLineBrush);
+        AddColorRow("gpu", "GPU", _gpuLineBrush);
+        AddColorRow("disk", "Disk", _diskLineBrush);
+        AddColorRow("net", "Network", _netLineBrush);
+    }
+
+    private void AddColorRow(string res, string label, SolidColorBrush brush)
+    {
+        var row = new Grid { Padding = new Thickness(0, 6, 0, 6) };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center });
+
+        var swatch = new Button { Width = 46, Height = 28, Background = brush, CornerRadius = new CornerRadius(6), Padding = new Thickness(0) };
+        var picker = new ColorPicker { Color = brush.Color, IsAlphaEnabled = false, IsMoreButtonVisible = true, Width = 300 };
+        picker.ColorChanged += (_, e) => SetResourceColor(res, e.NewColor);
+        swatch.Flyout = new Flyout { Content = picker };
+        Grid.SetColumn(swatch, 1);
+        row.Children.Add(swatch);
+        ColorsList.Children.Add(row);
+    }
+
+    private void ResetColors_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.CpuColor = ""; _settings.MemColor = ToHex(DefMem); _settings.GpuColor = ToHex(DefGpu);
+        _settings.DiskColor = ToHex(DefDisk); _settings.NetColor = ToHex(DefNet);
+        _cpuLineBrush.Color = _cpuFillBrush.Color = SystemAccent();
+        _memLineBrush.Color = _memFillBrush.Color = DefMem;
+        _gpuLineBrush.Color = _gpuFillBrush.Color = DefGpu;
+        _diskLineBrush.Color = _diskFillBrush.Color = DefDisk;
+        _netLineBrush.Color = _netFillBrush.Color = DefNet;
+        _settings.Save();
+        BuildColorRows();
     }
 
     private static void StyleGraph(Polyline line, Polygon fill, Brush stroke, Brush fillBrush)
