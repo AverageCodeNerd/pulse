@@ -137,7 +137,6 @@
                 </Border>
 
                 <ListView x:Name="ProcList" Grid.Row="3" SelectionMode="Single"
-                          ItemContainerStyle="{StaticResource StretchItem}"
                           SelectionChanged="ProcList_SelectionChanged"
                           DoubleTapped="ProcList_DoubleTapped"
                           KeyDown="ProcList_KeyDown">
@@ -147,7 +146,7 @@
                     </ListView.ItemContainerTransitions>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Padding="10,7" Background="Transparent" RightTapped="ProcRow_RightTapped">
+                            <Grid Padding="0" Background="Transparent" RightTapped="ProcRow_RightTapped">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="85" />
@@ -428,12 +427,11 @@
                     </Grid>
                 </Border>
                 <ListView x:Name="SvcList" Grid.Row="3" SelectionMode="Single"
-                          ItemContainerStyle="{StaticResource StretchItem}"
                           SelectionChanged="SvcList_SelectionChanged">
                     <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Padding="10,8" Background="Transparent" RightTapped="SvcRow_RightTapped">
+                            <Grid Padding="0" Background="Transparent" RightTapped="SvcRow_RightTapped">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="120" />
@@ -517,6 +515,25 @@
                                 <ComboBoxItem Content="Light" Tag="Light" />
                                 <ComboBoxItem Content="Dark" Tag="Dark" />
                             </ComboBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- Density -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="18,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="3">
+                                <TextBlock Text="Compact rows" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Text="Tighter list rows so more processes and services fit on screen." FontSize="12.5"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ToggleSwitch x:Name="CompactToggle" Grid.Column="1" VerticalAlignment="Center"
+                                          OnContent="On" OffContent="Off" Toggled="CompactToggle_Toggled" />
                         </Grid>
                     </Border>
 

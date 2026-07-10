@@ -89,6 +89,8 @@ public sealed partial class MainWindow : Window
         CpuBar.Foreground = _cpuLineBrush;
         MemBar.Foreground = _memLineBrush;
         BuildColorRows();
+        ApplyDensity(_settings.Compact);
+        CompactToggle.IsOn = _settings.Compact;
         BuildCoreTiles();
         BuildProcMenu();
         BuildSvcMenu();
@@ -726,6 +728,28 @@ public sealed partial class MainWindow : Window
     {
         ApplyAlwaysOnTop(AlwaysOnTopToggle.IsOn);
         if (!_loadingSettings) { _settings.AlwaysOnTop = AlwaysOnTopToggle.IsOn; _settings.Save(); }
+    }
+
+    private void CompactToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        ApplyDensity(CompactToggle.IsOn);
+        if (!_loadingSettings) { _settings.Compact = CompactToggle.IsOn; _settings.Save(); }
+    }
+
+    private Style RowStyle(double vpad)
+    {
+        var s = new Style(typeof(ListViewItem));
+        s.Setters.Add(new Setter(Control.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch));
+        s.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(10, vpad, 10, vpad)));
+        s.Setters.Add(new Setter(Control.MinHeightProperty, 0.0));
+        return s;
+    }
+
+    private void ApplyDensity(bool compact)
+    {
+        double vpad = compact ? 3 : 7;
+        ProcList.ItemContainerStyle = RowStyle(vpad);
+        SvcList.ItemContainerStyle = RowStyle(vpad);
     }
 
     private void ApplyAlwaysOnTop(bool on)
