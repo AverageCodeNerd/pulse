@@ -109,13 +109,11 @@ The download buttons point at `.../releases/latest/download/Pulse-Setup.exe`, so
 - [x] Power actions: Suspend/Resume, End process tree, Set priority.
 - [x] Customization: **custom graph colors**, **compact/comfortable** density, sort arrows, empty states.
 - [x] **Column chooser** (show/hide process columns) and **close-to-system-tray**.
-- [ ] Per-process **network / GPU** columns (needs ETW / PDH counters).
-- [ ] Code-sign the installer (removes SmartScreen warning; needs a certificate).
+- [x] Per-process **GPU** (PDH GPU-Engine counters) and **Network** (ETW kernel session, admin-only) columns.
+- [x] Code-signing **pipeline** ready ([`SIGNING.md`](SIGNING.md), `installer/build-release.ps1`) — needs a certificate to actually sign.
+- [ ] Obtain a code-signing certificate (Azure Trusted Signing) to remove the SmartScreen warning.
 - [ ] Column reordering; winget / Scoop; ARM64 build.
 - [ ] CPU package power/temperature (needs a signed kernel driver, e.g. LibreHardwareMonitor).
-- [ ] Code-sign the installer (removes the SmartScreen warning).
-- [ ] winget / Scoop manifests; GitHub Actions workflow to automate releases.
-- [ ] ARM64 build.
 
 ## License
 MIT (intended).
