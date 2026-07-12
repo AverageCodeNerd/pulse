@@ -210,6 +210,7 @@ public sealed partial class MainWindow : Window
 
     private void ApplyProcesses(Snapshot snap)
     {
+        ProcessInfo.NetAvailable = snap.NetPerProcAvailable;
         var seen = new HashSet<int>(snap.Procs.Count);
         var list = new List<ProcessInfo>(snap.Procs.Count);
         foreach (var s in snap.Procs)
@@ -223,6 +224,8 @@ public sealed partial class MainWindow : Window
             pi.Cpu = s.Cpu;
             pi.MemMb = s.MemMb;
             pi.DiskMBs = s.DiskMBs;
+            pi.NetMbps = s.NetMbps;
+            pi.GpuPct = s.GpuPct;
             pi.Threads = s.Threads;
             pi.Status = s.Status;
             list.Add(pi);
@@ -246,12 +249,14 @@ public sealed partial class MainWindow : Window
 
     private static readonly (string Key, string Label, int Col, double Width)[] ColumnDefs =
     {
-        ("cpu", "CPU", 1, 85),
-        ("mem", "Memory", 2, 105),
-        ("disk", "Disk", 3, 95),
-        ("threads", "Threads", 4, 75),
-        ("pid", "PID", 5, 75),
-        ("status", "Status", 6, 100),
+        ("cpu", "CPU", 1, 76),
+        ("mem", "Memory", 2, 96),
+        ("disk", "Disk", 3, 88),
+        ("net", "Network", 4, 92),
+        ("gpu", "GPU", 5, 64),
+        ("threads", "Threads", 6, 66),
+        ("pid", "PID", 7, 66),
+        ("status", "Status", 8, 92),
     };
 
     private readonly List<WeakReference<Grid>> _rowGrids = new();
@@ -336,6 +341,8 @@ public sealed partial class MainWindow : Window
                                 : list.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase),
             "mem" => _sortDesc ? list.OrderByDescending(p => p.MemMb) : list.OrderBy(p => p.MemMb),
             "disk" => _sortDesc ? list.OrderByDescending(p => p.DiskMBs) : list.OrderBy(p => p.DiskMBs),
+            "net" => _sortDesc ? list.OrderByDescending(p => p.NetMbps) : list.OrderBy(p => p.NetMbps),
+            "gpu" => _sortDesc ? list.OrderByDescending(p => p.GpuPct) : list.OrderBy(p => p.GpuPct),
             "threads" => _sortDesc ? list.OrderByDescending(p => p.Threads) : list.OrderBy(p => p.Threads),
             "pid" => _sortDesc ? list.OrderByDescending(p => p.Pid) : list.OrderBy(p => p.Pid),
             _ => _sortDesc ? list.OrderByDescending(p => p.Cpu) : list.OrderBy(p => p.Cpu),

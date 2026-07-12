@@ -18,6 +18,8 @@ public sealed class SystemMonitor
     private readonly Stopwatch _sw = Stopwatch.StartNew();
     private readonly CpuMeter _cpu = new();
     private HardwareMeter? _hw; // lazily created on the sampling thread
+    private PerProcessGpu? _gpuProc;
+    private PerProcessNetwork? _netProc;
 
     public int Cores => _cores;
 
@@ -28,6 +30,15 @@ public sealed class SystemMonitor
         if (elapsedMs <= 0) elapsedMs = 1;
 
         _cpu.Sample();
+
+        Dictionary<int, double> gpuByPid;
+        try { gpuByPid = (_gpuProc ??= new PerProcessGpu()).Sample(); }
+        catch { gpuByPid = new Dictionary<int, double>(); }
+
+        Dictionary<int, long> netBytesByPid;
+        try { netBytesByPid = (_netProc ??= new PerProcessNetwork()).DrainBytes(); }
+        catch { netBytesByPid = new Dictionary<int, long>(); }
+        double elapsedSec = elapsedMs / 1000.0;
 
         var procs = new List<ProcSnap>(256);
         var seen = new HashSet<int>();
@@ -70,7 +81,10 @@ public sealed class SystemMonitor
                 }
                 catch { }
 
-                procs.Add(new ProcSnap(pid, name, Math.Min(cpuPct, 100), mem, diskMBs, threads, status));
+                double gpuPct = gpuByPid.TryGetValue(pid, out var gv) ? Math.Min(gv, 100) : 0;
+                double netMbps = netBytesByPid.TryGetValue(pid, out var nb) && elapsedSec > 0
+                    ? nb * 8 / 1_000_000.0 / elapsedSec : 0;
+                procs.Add(new ProcSnap(pid, name, Math.Min(cpuPct, 100), mem, diskMBs, netMbps, gpuPct, threads, status));
             }
             catch { /* exited mid-enumeration */ }
             finally { p.Dispose(); }
@@ -95,6 +109,7 @@ public sealed class SystemMonitor
             TotalMemMb = totalMb,
             PerCore = (double[])_cpu.PerCore.Clone(),
             Hw = hw,
+            NetPerProcAvailable = _netProc?.Active ?? false,
         };
     }
 

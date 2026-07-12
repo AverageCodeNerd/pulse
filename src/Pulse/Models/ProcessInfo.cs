@@ -33,6 +33,20 @@ public sealed class ProcessInfo : INotifyPropertyChanged
         set { if (Set(ref _diskMbs, value)) Raise(nameof(DiskText)); }
     }
 
+    private double _netMbps;
+    public double NetMbps
+    {
+        get => _netMbps;
+        set { if (Set(ref _netMbps, value)) Raise(nameof(NetText)); }
+    }
+
+    private double _gpuPct;
+    public double GpuPct
+    {
+        get => _gpuPct;
+        set { if (Set(ref _gpuPct, value)) Raise(nameof(GpuText)); }
+    }
+
     private int _threads;
     public int Threads
     {
@@ -54,6 +68,15 @@ public sealed class ProcessInfo : INotifyPropertyChanged
         : _memMb.ToString("0") + " MB";
 
     public string DiskText => _diskMbs < 0.05 ? "0 MB/s" : _diskMbs.ToString("0.0") + " MB/s";
+
+    /// <summary>App-wide flag: per-process network needs an elevated ETW session.</summary>
+    public static bool NetAvailable { get; set; } = true;
+
+    public string NetText => !NetAvailable ? "—"
+        : _netMbps < 0.05 ? "0 Mbps"
+        : (_netMbps < 10 ? _netMbps.ToString("0.0") : _netMbps.ToString("0")) + " Mbps";
+
+    public string GpuText => _gpuPct < 0.5 ? "0%" : _gpuPct.ToString("0") + "%";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

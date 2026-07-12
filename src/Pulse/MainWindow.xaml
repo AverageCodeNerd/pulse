@@ -117,21 +117,26 @@
                     <Grid x:Name="ProcHeaderGrid">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="85" />
-                            <ColumnDefinition Width="105" />
-                            <ColumnDefinition Width="95" />
-                            <ColumnDefinition Width="75" />
-                            <ColumnDefinition Width="75" />
-                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="76" />
+                            <ColumnDefinition Width="96" />
+                            <ColumnDefinition Width="88" />
+                            <ColumnDefinition Width="92" />
+                            <ColumnDefinition Width="64" />
+                            <ColumnDefinition Width="66" />
+                            <ColumnDefinition Width="66" />
+                            <ColumnDefinition Width="92" />
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" Style="{StaticResource HeaderButton}" HorizontalContentAlignment="Left"
                                 Content="Name" Tag="name" Click="Header_Click" />
                         <Button Grid.Column="1" Style="{StaticResource HeaderButton}" Content="CPU" Tag="cpu" Click="Header_Click" />
                         <Button Grid.Column="2" Style="{StaticResource HeaderButton}" Content="Memory" Tag="mem" Click="Header_Click" />
                         <Button Grid.Column="3" Style="{StaticResource HeaderButton}" Content="Disk" Tag="disk" Click="Header_Click" />
-                        <Button Grid.Column="4" Style="{StaticResource HeaderButton}" Content="Threads" Tag="threads" Click="Header_Click" />
-                        <Button Grid.Column="5" Style="{StaticResource HeaderButton}" Content="PID" Tag="pid" Click="Header_Click" />
-                        <TextBlock Grid.Column="6" Text="Status" HorizontalAlignment="Right" FontWeight="SemiBold"
+                        <Button Grid.Column="4" Style="{StaticResource HeaderButton}" Content="Network" Tag="net" Click="Header_Click"
+                                ToolTipService.ToolTip="Per-process network needs Pulse running as administrator (Settings → Restart as administrator)." />
+                        <Button Grid.Column="5" Style="{StaticResource HeaderButton}" Content="GPU" Tag="gpu" Click="Header_Click" />
+                        <Button Grid.Column="6" Style="{StaticResource HeaderButton}" Content="Threads" Tag="threads" Click="Header_Click" />
+                        <Button Grid.Column="7" Style="{StaticResource HeaderButton}" Content="PID" Tag="pid" Click="Header_Click" />
+                        <TextBlock Grid.Column="8" Text="Status" HorizontalAlignment="Right" FontWeight="SemiBold"
                                    Padding="4,2" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </Grid>
                 </Border>
@@ -149,20 +154,24 @@
                             <Grid Padding="0" Background="Transparent" RightTapped="ProcRow_RightTapped" Loaded="ProcRow_Loaded">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="85" />
-                                    <ColumnDefinition Width="105" />
-                                    <ColumnDefinition Width="95" />
-                                    <ColumnDefinition Width="75" />
-                                    <ColumnDefinition Width="75" />
-                                    <ColumnDefinition Width="100" />
+                                    <ColumnDefinition Width="76" />
+                                    <ColumnDefinition Width="96" />
+                                    <ColumnDefinition Width="88" />
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="64" />
+                                    <ColumnDefinition Width="66" />
+                                    <ColumnDefinition Width="66" />
+                                    <ColumnDefinition Width="92" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text="{Binding CpuText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
                                 <TextBlock Grid.Column="2" Text="{Binding MemText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
                                 <TextBlock Grid.Column="3" Text="{Binding DiskText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
-                                <TextBlock Grid.Column="4" Text="{Binding Threads}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
-                                <TextBlock Grid.Column="5" Text="{Binding Pid}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
-                                <TextBlock Grid.Column="6" Text="{Binding Status}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                <TextBlock Grid.Column="4" Text="{Binding NetText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                                <TextBlock Grid.Column="5" Text="{Binding GpuText}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                                <TextBlock Grid.Column="6" Text="{Binding Threads}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                                <TextBlock Grid.Column="7" Text="{Binding Pid}" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" />
+                                <TextBlock Grid.Column="8" Text="{Binding Status}" HorizontalAlignment="Right" VerticalAlignment="Center"
                                            Foreground="{Binding Status, Converter={StaticResource StatusBrush}}" />
                             </Grid>
                         </DataTemplate>
